@@ -32,17 +32,22 @@ class Data(object):
 
     Arguments:
         object -- _description_
+        
+    Attributes:
+
+        
+    Functions:
+        initialize_spec -- Read in 1D spectrum file and create spectrum attributes 
     """
     
-    def __init__(self,spectrum_file,photometry_file,run_ID,phot_id,xwave=None):
+    def __init__(self,spectrum_file,photometry_file,run_ID,phot_id):
 
         reload(msaexp.resample_numba); reload(msaexp.spectrum)
         reload(msaexp.resample_numba); reload(msaexp.spectrum)
 
         
         try:
-            from msaexp.resample_numba import \
-                resample_template_numba as resample_func
+            from msaexp.resample_numba import resample_template_numba as resample_func
         except ImportError:
             from .resample import resample_template as resample_func
             
@@ -51,14 +56,10 @@ class Data(object):
         self.photometry_file = photometry_file
         self.run_ID = run_ID
         self.phot_id = phot_id
-
-        if xwave is not None:
-            self.xwave = xwave
-        else:
-            self.xwave = None
         
+        
+        # create new folder for this data and session 
         here =  os.getcwd()
-        
         newpath = here+f"/{run_ID}/"
         
         if not os.path.exists(newpath):
@@ -71,9 +72,7 @@ class Data(object):
             froot = spectrum_file.split('.fits')[0]
             
         self.fname = froot
-                
         self.ID = newpath+froot
-        #spec_wobs = None
         
         self.initialize_spec()
 
@@ -82,7 +81,7 @@ class Data(object):
         else:
             print("No photometry found")
 
-        self.initialize_emission_line()
+        #self.initialize_emission_line()
         
         
     def initialize_spec(self):
@@ -123,9 +122,9 @@ class Data(object):
 
                 # for particular cases
 
-                if self.xwave is not None:
+                #if self.xwave is not None:
 
-                    vvalid &= (spec['wave']>self.xwave[0]) & (spec['wave']<self.xwave[1])
+                #    vvalid &= (spec['wave']>self.xwave[0]) & (spec['wave']<self.xwave[1])
 
 
                 ###############################################################################
@@ -148,7 +147,7 @@ class Data(object):
                     um = u.micron
 
         
-                _data_path = "/home/ec2-user/msa_nirspec_disp_curves" #make this generalised (in msaexp data dir) 
+                _data_path = os.path.abspath('../filters/msa_nirspec_disp_curves') #make this generalised (in msaexp data dir) 
                 disp = utils.read_catalog(f'{_data_path}/jwst_nirspec_{grating}_disp.fits')
 
 
@@ -157,21 +156,14 @@ class Data(object):
                 
                 flam_unit = 1.e-19*u.erg/u.second/u.cm**2/u.Angstrom # change to attribute 
                 self.equiv = u.spectral_density(spec['wave'].data*um)
-                global to_flam
-                to_flam = (1.*spec['flux'].unit).to(flam_unit, equivalencies=self.equiv).value #property 
+                self.to_flam = (1.*spec['flux'].unit).to(flam_unit, equivalencies=self.equiv).value #property 
                 self.flamunit = flam_unit.unit
-
-                global spec_R_fwhm
-                global valid
-                global spec_wobs
-                global spec_fnu
-                global spec_efnu
-                spec_R_fwhm = (np.interp(spec['wave'], disp['WAVELENGTH'], disp['R'],
+                self.spec_R_fwhm = (np.interp(spec['wave'], disp['WAVELENGTH'], disp['R'],
                                       left=disp['R'][0], right=disp['R'][-1])).astype(np.float32)
-                valid = spec['valid']
-                spec_wobs = spec['wave'].value.astype(np.float32)
-                spec_fnu = spec['flux'].value.astype(np.float32)
-                spec_efnu = spec['err'].value.astype(np.float32)
+                self.valid = spec['valid']
+                self.spec_wobs = spec['wave'].value.astype(np.float32)
+                self.spec_fnu = spec['flux'].value.astype(np.float32)
+                self.spec_efnu = spec['err'].value.astype(np.float32)
                 self.grating = grating
                 self.filter = _filter
 
