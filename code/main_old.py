@@ -1609,7 +1609,6 @@ class Spectrum(object):
             plt.xlabel("step number");
             plt.show()
 
-     
 
     def plot_corner(self,flat_samples,labs=['z','vw','vw_b','sc', 'line Ha','line NII'],save=False):
         #labs=['z','vw','sc', 'line Hb','line OIII-4959','line OIII-5007']
