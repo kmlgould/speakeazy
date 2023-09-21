@@ -1,4 +1,44 @@
+import os
 
+import re
+from importlib import reload
+
+import hickle as hkl
+import msaexp
+import numpy as np
+from astropy.table import Table
+from msaexp import pipeline, spectrum
+
+print(f'msaexp version = {msaexp.__version__}')
+print(f'numpy version = {np.__version__}')
+import sys
+import time
+import warnings
+from collections import OrderedDict
+from functools import wraps
+
+import astropy.units as u
+import corner
+import dill
+import eazy
+import emcee
+import matplotlib.pyplot as plt
+import msaexp.resample_numba
+import msaexp.spectrum
+import numba
+import pathos.multiprocessing as mp
+from astropy.io import fits
+from grizli import utils
+from grizli import utils as utils
+from scipy import stats
+from scipy.optimize import nnls
+from tqdm import tqdm
+
+utils.set_warnings()
+
+
+from .models import *
+from .data import *
 
 class Priors(object):
     """Priors _summary_
@@ -10,12 +50,34 @@ class Priors(object):
     """
     
     def __init__(self) -> None:
-        pass
+        self.set_params()
+    
+    
+    def set_params(self,fix_ns=True,ns=13,epoly=4,ppoly=3,vw=100.,vw_b=300.,sc=1.3,z=3.652,z0=[3.,4.],zstep=None,halpha_prism='free',scale_p=False,broadlines=False):
+        
+        self.params = {}
+        self.params['z_in'] = z
+        self.params['z_range'] = z0
+        self.params['sc']=sc
+        self.params['vw_prior'] = vw
+        self.params['vwb_prior'] = vw_b
+        self.params['fix_ns']=fix_ns
+        self.params['nspline']=ns
+        self.params['epoly']=epoly
+        self.params['scale_p']=scale_p
+        if self.params['scale_p']==True:
+            self.params['ppoly'] = ppoly
+        else:
+            self.params['ppoly'] = 0
+            
+        self.params['halpha_prism']=halpha_prism
+        self.params['broadlines']=broadlines
+
     
     def init_logprior(self):
         from scipy.stats import expon, gamma, norm, uniform
 
-        if self.grating != "prism":
+        if Data.grating != "prism":
             zscale = 0.0001
             sc_scale = 0.01
         else:
@@ -29,7 +91,7 @@ class Priors(object):
         if self.params['broadlines']:
             self.prior_widths = [1e-3,1.,1.,sc_scale,epscale]
         else:
-            if self.grating == "prism":
+            if Data.grating == "prism":
                 self.prior_widths = [1e-3,1.,sc_scale,epscale]
             else:
                 self.prior_widths = [1e-3,10.,sc_scale,epscale]
@@ -45,9 +107,9 @@ class Priors(object):
         # Balmer line ratios for Ha,Hb,Hg,Hd, prior based on case B, ratios from Groves et al. 2011
         # https://arxiv.org/pdf/1109.2597.pdf
 
-        hahb_lr = self.lr['Balmer 10kK'][0] 
-        hahg_lr = self.lr['Balmer 10kK'][0]*(1./self.lr['Balmer 10kK'][2])
-        hahd_lr = self.lr['Balmer 10kK'][0]*(1./self.lr['Balmer 10kK'][3])
+        hahb_lr = Models.lr['Balmer 10kK'][0] 
+        hahg_lr = Models.lr['Balmer 10kK'][0]*(1./Modelslr['Balmer 10kK'][2])
+        hahd_lr = Models.lr['Balmer 10kK'][0]*(1./Models.lr['Balmer 10kK'][3])
         #print("2.86, 0.47, 0.26")
         #print(hahb_lr,hghb_lr,hdhb_lr)
         

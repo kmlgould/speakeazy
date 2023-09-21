@@ -83,7 +83,7 @@ class Data(object):
 
         #self.initialize_emission_line()
         
-        
+       
     def initialize_spec(self):
         """
         Read in 1D spectrum file and process key properties
@@ -193,3 +193,10 @@ class Data(object):
                 spec_efnu = np.random.normal(0,1,len(flux))
                 self.grating = grating
                 self.filter = _filter
+                
+        @property
+        def NWAVE(self):
+            if spec_wobs is not None:
+                return len(spec_wobs)
+            else:
+                return 0

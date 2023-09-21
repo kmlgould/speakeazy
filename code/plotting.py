@@ -1,4 +1,48 @@
+import os
 
+import re
+from importlib import reload
+
+import hickle as hkl
+import msaexp
+import numpy as np
+from astropy.table import Table
+from msaexp import pipeline, spectrum
+
+from .fitting import Fitting
+
+print(f'msaexp version = {msaexp.__version__}')
+print(f'numpy version = {np.__version__}')
+import sys
+import time
+import warnings
+from collections import OrderedDict
+from functools import wraps
+
+import astropy.units as u
+import corner
+import dill
+import eazy
+import emcee
+import matplotlib.pyplot as plt
+import msaexp.resample_numba
+import msaexp.spectrum
+import numba
+import pathos.multiprocessing as mp
+from astropy.io import fits
+from grizli import utils
+from grizli import utils as utils
+from scipy import stats
+from scipy.optimize import nnls
+from tqdm import tqdm
+
+utils.set_warnings()
+
+
+from .models import *
+from .data import *
+from .fitting import *
+from .priors import *
 
 class Plotting(object):
     """Plotting 
@@ -13,15 +57,15 @@ class Plotting(object):
         pass 
     
     def plot_spectrum(self,save=True,fname=None,flat_samples=None,line_snr=5.,show_lines=False,ylims=None,xlims=None):
-        mask = valid
+        mask = Data.valid
         
-        flam = spec_fnu*to_flam
-        eflam = spec_efnu*to_flam
+        flam = Data.spec_fnu*Data.to_flam
+        eflam = Data.spec_efnu*Data.to_flam
         
         flam[~mask] = np.nan
         eflam[~mask] = np.nan
         
-        wav = spec_wobs
+        wav = Data.spec_wobs
         
         xmin = np.nanmin(wav[mask])
         xmax = np.nanmax(wav[mask])
@@ -32,9 +76,9 @@ class Plotting(object):
 
         scale=1.
         
-        if (self.params['scale_p']==True):
-            if (self.theta['pscale_0']!=1.) : 
-                pscale_coeffs = np.array([self.theta[f'pscale_{i}'] for i in range(self.params['ppoly'])])
+        if (Priors.params['scale_p']==True):
+            if (Fitting.theta['pscale_0']!=1.) : 
+                pscale_coeffs = np.array([Fitting.theta[f'pscale_{i}'] for i in range(Priors.params['ppoly'])])
                 scale = (np.polyval(pscale_coeffs,wav))
             #else:
             #    scale = 1.
@@ -49,24 +93,24 @@ class Plotting(object):
         ymin = np.nanmin((flam*scale)[mask])
         #print(ymin,ymax)
 
-        if hasattr(self, 'model_spec'):
+        if hasattr(Fitting, 'model_spec'):
             #if (self.params['scale_p']==True):
             #    if (self.theta['pscale_0']!=1.):
                     # scaling has already been applied 
           #          plt.step(wav[mask],(self.model_spec)[mask],color='blue',label='Model')
         #else:
-            plt.step(wav[mask],(self.model_spec*scale)[mask],color='black',label='Model')
+            plt.step(wav[mask],(Fitting.model_spec*scale)[mask],color='black',label='Model')
 
             
-            plt.step(wav[mask],(self.model_line*scale)[mask],color='blue',label='Lines')
+            plt.step(wav[mask],(Fitting.model_line*scale)[mask],color='blue',label='Lines')
             #plt.step(wav[mask],(self.model_bline*scale)[mask],color='red',label='Broad lines')
             #plt.step(wav[mask],self.model_cont[mask],color='olive',label='Continuum')
 
             if hasattr(scale, "__len__"):
-                plt.plot(spec_wobs[mask], (((sp.Acont.T).T))*scale[mask,None],
+                plt.plot(Data.spec_wobs[mask], (((Fitting.Acont.T).T))*scale[mask,None],
                         color='olive', alpha=0.3)
             else:
-                plt.plot(spec_wobs[mask], (((sp.Acont.T).T))*scale,
+                plt.plot(Data.spec_wobs[mask], (((Fitting.Acont.T).T))*scale,
                         color='olive', alpha=0.3)
             # plot emission lines 
 
@@ -74,16 +118,16 @@ class Plotting(object):
 
                 
                 
-                for line in self.line_table:
-                    l_snr = abs(self.line_table[line][0])/abs(self.line_table[line][1])
+                for line in Fitting.line_table:
+                    l_snr = abs(Fitting.line_table[line][0])/abs(Fitting.line_table[line][1])
                     if l_snr>line_snr:
                         #lname = line.strip(' line') # get name of line
                         lname = re.sub(r'line ', '', line)
-                        if len(self.lw[lname])>0:
-                            wavl = np.average(self.lw[lname])
+                        if len(Models.lw[lname])>0:
+                            wavl = np.average(Models.lw[lname])
                         else:
-                            wavl = self.lw[lname]
-                        line_center = (wavl*(1.+self.theta['z']))/1e4
+                            wavl = Models.lw[lname]
+                        line_center = (wavl*(1.+Fitting.theta['z']))/1e4
                         if (xlims[0]<line_center<xlims[1]):
                             plt.axvline(line_center,ls='dashed',color='blue',alpha=0.5)
                             plt.text(x=line_center,y=ymax*0.5,s=lname,rotation=90,fontsize=9,color='blue',alpha=0.5)
