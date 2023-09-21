@@ -37,7 +37,7 @@ from tqdm import tqdm
 utils.set_warnings()
 
 from pylab import *
-from .priors import *
+from .priors import Priors
 from .fitting import Fitting
 
 rc('axes', linewidth=1.5)

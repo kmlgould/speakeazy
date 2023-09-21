@@ -39,10 +39,10 @@ from tqdm import tqdm
 utils.set_warnings()
 
 
-from .models import *
-from .data import *
-from .fitting import *
-from .priors import *
+from .models import Models
+from .priors import Priors
+from .data import Data
+from .plotting import Plotting
 
 class Plotting(object):
     """Plotting 

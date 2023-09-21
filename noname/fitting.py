@@ -37,11 +37,11 @@ from tqdm import tqdm
 utils.set_warnings()
 
 from pylab import *
-
-from .models import *
-from .priors import * 
-from .data import *
-from .plotting import *
+ß
+from .models import Models
+from .priors import Priors
+from .data import Data
+from .plotting import Plotting
 
 rc('axes', linewidth=1.5)
 rc('xtick',direction='in')#, minor_visible=True, major_width=1.2, minor_width=1.0)

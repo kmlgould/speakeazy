@@ -37,8 +37,9 @@ from tqdm import tqdm
 utils.set_warnings()
 
 
-from .models import *
-from .data import *
+from .models import Models
+from .data import Data
+
 
 class Priors(object):
     """Priors _summary_
