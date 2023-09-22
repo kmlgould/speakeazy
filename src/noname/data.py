@@ -147,7 +147,7 @@ class Data(object):
                     um = u.micron
 
         
-                _data_path = os.path.abspath('../filters/msa_nirspec_disp_curves') #make this generalised (in msaexp data dir) 
+                _data_path = os.path.abspath('../noname/msa_nirspec_disp_curves') #make this generalised (in msaexp data dir) 
                 disp = utils.read_catalog(f'{_data_path}/jwst_nirspec_{grating}_disp.fits')
 
 

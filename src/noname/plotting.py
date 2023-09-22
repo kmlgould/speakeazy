@@ -9,8 +9,6 @@ import numpy as np
 from astropy.table import Table
 from msaexp import pipeline, spectrum
 
-from .fitting import Fitting
-
 print(f'msaexp version = {msaexp.__version__}')
 print(f'numpy version = {np.__version__}')
 import sys
@@ -39,10 +37,10 @@ from tqdm import tqdm
 utils.set_warnings()
 
 
-from .models import Models
-from .priors import Priors
-from .data import Data
-from .plotting import Plotting
+from fitting import Fitting 
+from priors import Priors
+from data import Data
+from plotting import Plotting
 
 class Plotting(object):
     """Plotting 
@@ -123,10 +121,10 @@ class Plotting(object):
                     if l_snr>line_snr:
                         #lname = line.strip(' line') # get name of line
                         lname = re.sub(r'line ', '', line)
-                        if len(Models.lw[lname])>0:
-                            wavl = np.average(Models.lw[lname])
+                        if len(Priors.lw[lname])>0:
+                            wavl = np.average(Priors.lw[lname])
                         else:
-                            wavl = Models.lw[lname]
+                            wavl = Priors.lw[lname]
                         line_center = (wavl*(1.+Fitting.theta['z']))/1e4
                         if (xlims[0]<line_center<xlims[1]):
                             plt.axvline(line_center,ls='dashed',color='blue',alpha=0.5)

@@ -36,9 +36,7 @@ from tqdm import tqdm
 
 utils.set_warnings()
 
-
-from .models import Models
-from .data import Data
+from data import Data
 
 
 class Priors(object):
@@ -51,6 +49,9 @@ class Priors(object):
     """
     
     def __init__(self) -> None:
+        lw, lr = utils.get_line_wavelengths()
+        self.lw = lw
+        self.lr = lr
         self.set_params()
     
     
@@ -109,8 +110,8 @@ class Priors(object):
         # https://arxiv.org/pdf/1109.2597.pdf
 
         hahb_lr = Models.lr['Balmer 10kK'][0] 
-        hahg_lr = Models.lr['Balmer 10kK'][0]*(1./Modelslr['Balmer 10kK'][2])
-        hahd_lr = Models.lr['Balmer 10kK'][0]*(1./Models.lr['Balmer 10kK'][3])
+        hahg_lr = Models.lr['Balmer 10kK'][0]*(1./self.lr['Balmer 10kK'][2])
+        hahd_lr = Models.lr['Balmer 10kK'][0]*(1./self.lr['Balmer 10kK'][3])
         #print("2.86, 0.47, 0.26")
         #print(hahb_lr,hghb_lr,hdhb_lr)
         
@@ -179,3 +180,9 @@ class Priors(object):
             hahd_prior = self.hahd_rv.logpdf(Ha/Hd)
             
         return  hahb_prior + hahg_prior + hahd_prior
+    
+def measure_line_prior():
+    """line_prior measures FWHM of lines and draws vel width and scale disp from joint prior distribution 
+      takes as input: raw data? ehhhh 
+    _extended_summary_
+    """

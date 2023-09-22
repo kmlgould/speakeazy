@@ -37,8 +37,8 @@ from tqdm import tqdm
 utils.set_warnings()
 
 from pylab import *
-import priors
-import fitting 
+from priors import Priors
+
 
 rc('axes', linewidth=1.5)
 rc('xtick',direction='in')#, minor_visible=True, major_width=1.2, minor_width=1.0)
@@ -128,7 +128,7 @@ class Models(object):
                                        )
         return bspl.T
 
-    def initialize_bsplines(self):
+    def initialize_bsplines(self,input_params):
         """ Make the bspline arrays """
         if Priors.params['nspline'] is not None:
             self.bsplines = self.bspline_array(nspline=Priors.params['nspline'],log=False) #initialise
@@ -137,7 +137,7 @@ class Models(object):
             self.bsplines = self.bspline_array(nspline=21,log=False) #initialise
             
 
-    def generate_templates(self,z,scale_disp,vel_width,vel_width_b,init=False,broadlines=False):
+    def generate_templates(self,z,scale_disp,vel_width,vel_width_b,theta=None,init=False,broadlines=False):
         """
         Generates gaussian emission line templates.
 
@@ -187,7 +187,7 @@ class Models(object):
             
         else:
 
-            line_names1 = [l for l in Fitting.theta.keys() if l.startswith("line ")]
+            line_names1 = [l for l in theta.keys() if l.startswith("line ")]
        
             line_names = [re.sub(r'line ', '', l,1) for l in line_names1]
         
