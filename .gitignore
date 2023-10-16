@@ -11,13 +11,13 @@ docs/api/*
 
 docs/examples/codespace/*
 
-src/speakeazy/version.py
-src/speakeazy/tests/.DS_Store
-src/speakeazy/tests/data/ceers-prism.1345_933.v0.*
-src/speakeazy/tests/data/test-driz*
-src/speakeazy/tests/data/jw01345062001_03101_00001_nrs2.*
-src/speakeazy/tests/data/FILTER.RES.latest
-src/speakeazy/tests/data/templates
+speakeazy/version.py
+speakeazy/tests/.DS_Store
+speakeazy/tests/data/ceers-prism.1345_933.v0.*
+speakeazy/tests/data/test-driz*
+speakeazy/tests/data/jw01345062001_03101_00001_nrs2.*
+speakeazy/tests/data/FILTER.RES.latest
+speakeazy/tests/data/templates
     
 # Byte-compiled / optimized / DLL files
 __pycache__/
