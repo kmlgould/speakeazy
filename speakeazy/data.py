@@ -146,10 +146,13 @@ class Data(object):
                 if um is None:
                     um = u.micron
 
-        
-                _data_path = os.path.abspath('../noname/msa_nirspec_disp_curves') #make this generalised (in msaexp data dir) 
-                disp = utils.read_catalog(f'{_data_path}/jwst_nirspec_{grating}_disp.fits')
-
+                
+                _disp_path = os.path.join(os.path.dirname(__file__), 
+                                          'data/msa_nirspec_disp_curves')
+                _disp_file = os.path.join(_disp_path, 
+                                          f'jwst_nirspec_{grating}_disp.fits')
+                
+                disp = utils.read_catalog(_disp_file)
 
                 #spec['R'] = np.interp(spec['wave'], disp['WAVELENGTH'], disp['R'],
                 #                      left=disp['R'][0], right=disp['R'][-1])
@@ -176,10 +179,15 @@ class Data(object):
                 wave = spec['WAVELENGTH']
                 fluxin = spec['extracted_flux_plus_bg_resel']
                 flux = np.array([self.flam_to_ujy(fl*1e-19,ww*1e4) for (fl,ww) in zip(fluxin,wave)])
-                _data_path = "/home/ec2-user/msa_nirspec_disp_curves" #make this generalised (in msaexp data dir) 
+
+                _data_path = os.path.join(os.path.dirname(__file__), 
+                                          'data/msa_nirspec_disp_curves')
+                
                 grating = "prism"
                 _filter = "clear"
-                disp = utils.read_catalog(f'{_data_path}/jwst_nirspec_{grating}_disp.fits')
+                _disp_file = os.path.join(_data_path, 
+                                          f'jwst_nirspec_{grating}_disp.fits')
+                disp = utils.read_catalog(_disp_file)
                 flam_unit = 1.e-19*u.erg/u.second/u.cm**2/u.Angstrom # change to attribute 
                 fnu_unit = 1e-3*u.jansky
                 self.equiv = u.spectral_density(wave*um)
