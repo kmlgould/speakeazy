@@ -16,7 +16,7 @@ from astropy.io import fits
 from .fitting import Fitting 
 from .priors import Priors
 from .data import Data
-from .plotting import Plotting
+#from .plotting import Plotting
 
 class Plotting(object):
     """Plotting 

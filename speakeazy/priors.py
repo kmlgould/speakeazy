@@ -21,8 +21,8 @@ class Priors(object):
         self.lw = lw
         self.lr = lr
         
-        self.set_params()    
-    def set_params(self,fix_ns=True,ns=13,epoly=4,ppoly=3,vw=100.,vw_b=300.,sc=1.3,z=3.652,z0=[3.,4.],zstep=None,halpha_prism='free',scale_p=False,broadlines=False):
+        #self.set_params()    
+    def set_params(self,fix_ns=True,ns=13,epoly=3,ppoly=3,vw=100.,vw_b=300.,sc=1.3,z=None,z0=[0.,6.],zstep=None,halpha_prism='free',scale_p=False,broadlines=False):
         
         self.params = {}
         self.params['z_in'] = z

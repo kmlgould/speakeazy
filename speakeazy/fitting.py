@@ -44,7 +44,16 @@ class Fitting(object):
     def __init__(self,data,priors,models):
         
         self.data = data
-        self.priors = priors
+        
+        # check there are params in the priors class instance here 
+        
+        if hasattr(priors,'params'):
+            self.priors = priors
+            self.params = self.priors.params
+        else:
+            self.priors = Priors(self.data)
+            self.params = self.priors.set_params(self)
+            
         self.models = models
         
     
@@ -139,7 +148,7 @@ class Fitting(object):
         
             return zgrid, chi2
         
-    def init_params(self,input_params):
+    def init_params(self):
         # initialise input params for log-likelihood fitting
            # could also include initial redshift fit? or we put that somewhere else?"""
         # return self.params which has params either fixed or variable 
@@ -147,7 +156,7 @@ class Fitting(object):
         self.theta = None
         self.line_table = None
         self.bline_table = None 
-        self.params = Priors.set_params(self,**input_params)
+        #self.params = Priors.set_params(self,**input_params)
 
         escale_coeffs = np.ones(self.params['epoly']) #npoly 
         
@@ -317,13 +326,13 @@ class Fitting(object):
     
             self.bline_table = bline_tab
             
-    def fit_spectrum(self,input_params,ll=False,**kwargs):
+    def fit_spectrum(self,ll=False,**kwargs):
         """ initialises parameters and minimises -log likelihood """
             
         from scipy.optimize import minimize
         np.random.seed(42)
 
-        self.init_params(input_params)
+        self.init_params()
         for key in self.theta:
             print(key,":", self.theta[key])
         initial_params = np.array(list(self.theta.values()))
