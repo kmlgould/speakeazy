@@ -48,13 +48,13 @@ class Priors(object):
         object -- _description_
     """
     
-    def __init__(self) -> None:
+    def __init__(self,data):
         lw, lr = utils.get_line_wavelengths()
+        self.data = data 
         self.lw = lw
         self.lr = lr
-        self.set_params()
-    
-    
+        
+        self.set_params()    
     def set_params(self,fix_ns=True,ns=13,epoly=4,ppoly=3,vw=100.,vw_b=300.,sc=1.3,z=3.652,z0=[3.,4.],zstep=None,halpha_prism='free',scale_p=False,broadlines=False):
         
         self.params = {}
@@ -79,7 +79,7 @@ class Priors(object):
     def init_logprior(self):
         from scipy.stats import expon, gamma, norm, uniform
 
-        if Data.grating != "prism":
+        if self.data.grating != "prism":
             zscale = 0.0001
             sc_scale = 0.01
         else:
