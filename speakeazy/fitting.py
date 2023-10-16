@@ -57,19 +57,19 @@ class Fitting(object):
         object -- _description_
     """
     
-    def __init__(self):
+    def __init__(self,data,priors,models):
         
-        self.data = Data()
-        self.priors = Priors()
-        self.models = Models()
+        self.data = data
+        self.priors = priors
+        self.models = models
         
     
        
     def __fit_redshift(self,zgrid,zstep,sc,vw,vw_b,zfix=None): 
         
-        mask = Data.valid
-        flam = Data.spec_fnu*Data.to_flam
-        eflam = Data.spec_efnu*Data.to_flam
+        mask = self.data.valid
+        flam = self.data.spec_fnu*self.data.to_flam
+        eflam = self.data.spec_efnu*self.data.to_flam
 
 
         flam[~mask] = np.nan
@@ -155,7 +155,7 @@ class Fitting(object):
         
             return zgrid, chi2
         
-    def init_params(self,input_params,data):
+    def init_params(self,input_params):
         # initialise input params for log-likelihood fitting
            # could also include initial redshift fit? or we put that somewhere else?"""
         # return self.params which has params either fixed or variable 
@@ -175,7 +175,7 @@ class Fitting(object):
         Models.initialize_bsplines(self.params) #makes continuum splines
         
         
-        is_prism = Data.grating in ['prism']
+        is_prism = self.data.grating in ['prism']
 
         # FIT REDSHIFT 
 
@@ -238,9 +238,9 @@ class Fitting(object):
         self.model_line = _mline
         self.model_cont = _mcont
 
-        mask = Data.valid
-        flam = Data.spec_fnu*Data.to_flam
-        eflam = Data.spec_efnu*Data.to_flam
+        mask = self.data.valid
+        flam = self.data.spec_fnu*self.data.to_flam
+        eflam = self.data.spec_efnu*self.data.to_flam
 
 
         flam[~mask] = np.nan
@@ -333,7 +333,7 @@ class Fitting(object):
     
             self.bline_table = bline_tab
             
-    def fit_spectrum(self,input_params,data,ll=False,**kwargs):
+    def fit_spectrum(self,input_params,ll=False,**kwargs):
         """ initialises parameters and minimises -log likelihood """
             
         from scipy.optimize import minimize
@@ -446,13 +446,13 @@ class Fitting(object):
             _mcont = mspec - _mline
             _mbline = 0.
             
-        xr = Data.spec_wobs
+        xr = self.data.spec_wobs
         xr_ang = xr*1e4
 
         
-        mask = Data.valid
-        flam = Data.spec_fnu*Data.to_flam
-        eflam = Data.spec_efnu*Data.to_flam
+        mask = self.data.valid
+        flam = self.data.spec_fnu*self.data.to_flam
+        eflam = self.data.spec_efnu*self.data.to_flam
 
         
         
@@ -503,15 +503,15 @@ class Fitting(object):
             return mspec*pscale,_mline*pscale,_mbline*pscale,_mcont*pscale
         
     def plot_spectrum(self,save=True,fname=None,flat_samples=None,line_snr=5.,show_lines=False,ylims=None,xlims=None):
-        mask = Data.valid
+        mask = self.data.valid
         
-        flam = Data.spec_fnu*Data.to_flam
-        eflam = Data.spec_efnu*Data.to_flam
+        flam = self.data.spec_fnu*self.data.to_flam
+        eflam = self.data.spec_efnu*self.data.to_flam
         
         flam[~mask] = np.nan
         eflam[~mask] = np.nan
         
-        wav = Data.spec_wobs
+        wav = self.data.spec_wobs
         
         xmin = np.nanmin(wav[mask])
         xmax = np.nanmax(wav[mask])
@@ -553,10 +553,10 @@ class Fitting(object):
             #plt.step(wav[mask],self.model_cont[mask],color='olive',label='Continuum')
 
             if hasattr(scale, "__len__"):
-                plt.plot(Data.spec_wobs[mask], (((self.Acont.T).T))*scale[mask,None],
+                plt.plot(self.data.spec_wobs[mask], (((self.Acont.T).T))*scale[mask,None],
                         color='olive', alpha=0.3)
             else:
-                plt.plot(Data.spec_wobs[mask], (((self.Acont.T).T))*scale,
+                plt.plot(self.data.spec_wobs[mask], (((self.Acont.T).T))*scale,
                         color='olive', alpha=0.3)
             # plot emission lines 
 
