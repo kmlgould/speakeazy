@@ -1,46 +1,30 @@
 import os
-
 import re
-from importlib import reload
-
-import hickle as hkl
-import msaexp
-import numpy as np
-from astropy.table import Table
-from msaexp import pipeline, spectrum
-
-print(f'msaexp version = {msaexp.__version__}')
-print(f'numpy version = {np.__version__}')
 import sys
 import time
 import warnings
 from collections import OrderedDict
-from functools import wraps
 
-import astropy.units as u
-import corner
-import dill
-import eazy
-import emcee
+import numpy as np
 import matplotlib.pyplot as plt
-import msaexp.resample_numba
-import msaexp.spectrum
-import numba
-import pathos.multiprocessing as mp
-from astropy.io import fits
-from grizli import utils
-from grizli import utils as utils
-from scipy import stats
 from scipy.optimize import nnls
+import hickle as hkl
 from tqdm import tqdm
+
+from astropy.table import Table
+import astropy.units as u
+from astropy.io import fits
+
+import eazy
+from grizli import utils
 
 utils.set_warnings()
 
 from pylab import *
-from models import Models
-from priors import Priors
-from data import Data
 
+from .models import Models
+from .priors import Priors
+from .data import Data
 
 rc('axes', linewidth=1.5)
 rc('xtick',direction='in')#, minor_visible=True, major_width=1.2, minor_width=1.0)

@@ -1,4 +1,7 @@
 import os
+import time
+import warnings
+from collections import OrderedDict
 
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
@@ -7,48 +10,29 @@ os.environ["VECLIB_MAXIMUM_THREADS"] = "1" # export VECLIB_MAXIMUM_THREADS=4
 os.environ["NUMEXPR_NUM_THREADS"] = "1" 
 os.environ["OPENBLAS_MAIN_FREE"] = "1"
 
-import re
-from importlib import reload
 
-import hickle as hkl
-import msaexp
 import numpy as np
-from astropy.table import Table
-from msaexp import pipeline, spectrum
-
-print(f'msaexp version = {msaexp.__version__}')
-print(f'numpy version = {np.__version__}')
-import sys
-import time
-import warnings
-from collections import OrderedDict
-from functools import wraps
+from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 import astropy.units as u
+from astropy.io import fits
+
 import corner
-import dill
+
 import eazy
 import emcee
-import matplotlib.pyplot as plt
-import msaexp.resample_numba
-import msaexp.spectrum
-import numba
-import pathos.multiprocessing as mp
-from astropy.io import fits
-from grizli import utils
-from grizli import utils as utils
-from scipy import stats
-from scipy.optimize import nnls
-from tqdm import tqdm
 
-utils.set_warnings()
+import pathos.multiprocessing as mp
+
+from grizli import utils
 
 from pylab import *
 
-rc('axes', linewidth=1.5)
-rc('xtick',direction='in')#, minor_visible=True, major_width=1.2, minor_width=1.0)
-rc('ytick',direction='in')#, minor_visible=True, major_width=1.2, minor_width=1.0)
-rc('font',size=14)
+plt.rcParams['axes.linewidth'] = 1.5
+plt.rcParams['xtick.direction'] = 'in' #, minor_visible=True, major_width=1.2, minor_width=1.0)
+plt.rcParams['ytick.direction'] = 'in' #, minor_visible=True, major_width=1.2, minor_width=1.0)
+plt.rcParams['font.size'] =14
 plt.rcParams["font.family"] = "serif"
 
 
@@ -362,7 +346,6 @@ class Sampler(object):
 
     def plot_corner(self,flat_samples,labs=['z','vw','vw_b','sc', 'line Ha','line NII'],save=False):
         #labs=['z','vw','sc', 'line Hb','line OIII-4959','line OIII-5007']
-        import corner
         labels = list(self.theta.keys())
         indexes = [index for index in range(0,len(labels)) if labels[index] in labs]
            

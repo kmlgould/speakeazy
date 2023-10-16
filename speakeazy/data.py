@@ -1,27 +1,23 @@
 # import modules -------------------------------------------------------------------------------------------
 import os
 import re
-import hickle as hkl
-import msaexp
-import numpy as np
 import sys
 import warnings
+from collections import OrderedDict
 
+import hickle as hkl
+import numpy as np
 import astropy.units as u
 import eazy
-import numba
+
 from astropy.io import fits
-from grizli import utils as utils
-from pylab import *
-from collections import OrderedDict
+from grizli import utils
+
 from pylab import *
 from astropy.table import Table
-from msaexp import pipeline, spectrum, resample_numba
-from importlib import reload
+import msaexp
 
-utils.set_warnings()
-print(f"msaexp version = {msaexp.__version__}")
-print(f"numpy version = {np.__version__}")
+from importlib import reload
 
 #--------------------------------------------------------------------------------------------------------------
 
@@ -42,14 +38,10 @@ class Data(object):
     
     def __init__(self,spectrum_file,photometry_file,run_ID,phot_id):
 
-        reload(msaexp.resample_numba); reload(msaexp.spectrum)
-        reload(msaexp.resample_numba); reload(msaexp.spectrum)
-
-        
         try:
             from msaexp.resample_numba import resample_template_numba as resample_func
         except ImportError:
-            from .resample import resample_template as resample_func
+            from msaexp.resample import resample_template as resample_func
             
         self.resample_func = resample_func
         self.spectrum_file = spectrum_file

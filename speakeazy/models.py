@@ -1,44 +1,25 @@
 import os
-
 import re
-from importlib import reload
-
-import hickle as hkl
-import msaexp
-import numpy as np
-from astropy.table import Table
-from msaexp import pipeline, spectrum
-
-print(f'msaexp version = {msaexp.__version__}')
-print(f'numpy version = {np.__version__}')
 import sys
 import time
 import warnings
 from collections import OrderedDict
-from functools import wraps
 
-import astropy.units as u
-import corner
-import dill
-import eazy
-import emcee
 import matplotlib.pyplot as plt
-import msaexp.resample_numba
-import msaexp.spectrum
-import numba
-import pathos.multiprocessing as mp
+import numpy as np
+
+from astropy.table import Table
+import astropy.units as u
 from astropy.io import fits
+
 from grizli import utils
-from grizli import utils as utils
-from scipy import stats
-from scipy.optimize import nnls
-from tqdm import tqdm
 
 utils.set_warnings()
 
+# Make what you need from pylab implicit!
 from pylab import *
-from priors import Priors
 
+from .priors import Priors
 
 rc('axes', linewidth=1.5)
 rc('xtick',direction='in')#, minor_visible=True, major_width=1.2, minor_width=1.0)
@@ -75,15 +56,11 @@ class Models(object):
     
     def __init__(self):
         
-        reload(msaexp.resample_numba); reload(msaexp.spectrum)
-        reload(msaexp.resample_numba); reload(msaexp.spectrum)
-
-        
         try:
             from msaexp.resample_numba import \
                 resample_template_numba as resample_func
         except ImportError:
-            from .resample import resample_template as resample_func
+            from msaexp.resample import resample_template as resample_func
             
         self.resample_func = resample_func
         # make emission line templates as delta functions for now 
@@ -94,6 +71,7 @@ class Models(object):
     def initialize_emission_line(self, nsamp=64):
         """
         Initialize emission line
+        
         """
         self.xline = np.linspace(-nsamp, nsamp, 2*nsamp+1)/nsamp*0.1+1
         self.yline = self.xline*0.
