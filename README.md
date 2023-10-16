@@ -1,2 +1,2 @@
-# NONAME
-codespace for lines code 
+# speakeazy
+Spectrum Analysis Kit à la Eazy
