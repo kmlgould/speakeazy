@@ -54,7 +54,7 @@ class Models(object):
         get_lines -- get line centers and names of lines 
     """
     
-    def __init__(self):
+    def __init__(self,data,priors):
         
         try:
             from msaexp.resample_numba import \
@@ -63,6 +63,8 @@ class Models(object):
             from msaexp.resample import resample_template as resample_func
             
         self.resample_func = resample_func
+        self.priors = priors
+        self.data = data
         # make emission line templates as delta functions for now 
         self.initialize_emission_line()
         
@@ -86,8 +88,8 @@ class Models(object):
         """
         Generate emission line 
         """
-        res = self.resample_func(Data.spec_wobs,
-                                 Data.spec_R_fwhm*scale_disp, 
+        res = self.resample_func(self.data.spec_wobs,
+                                 self.data.spec_R_fwhm*scale_disp, 
                                  self.xline*line_um,
                                  self.yline,
                                  velocity_sigma=velocity_sigma,
@@ -98,7 +100,7 @@ class Models(object):
         """
         Generate bspline for continuum models 
         """
-        bspl = utils.bspline_templates(wave=Data.spec_wobs*1.e4,
+        bspl = utils.bspline_templates(wave=self.data.spec_wobs*1.e4,
                                        degree=3,
                                        df=nspline,
                                        log=log,
@@ -106,10 +108,10 @@ class Models(object):
                                        )
         return bspl.T
 
-    def initialize_bsplines(self,input_params):
+    def initialize_bsplines(self):
         """ Make the bspline arrays """
-        if Priors.params['nspline'] is not None:
-            self.bsplines = self.bspline_array(nspline=Priors.params['nspline'],log=False) #initialise
+        if self.priors.params['nspline'] is not None:
+            self.bsplines = self.bspline_array(nspline=self.priors.params['nspline'],log=False) #initialise
         else:
             # set default to 21 
             self.bsplines = self.bspline_array(nspline=21,log=False) #initialise
@@ -145,7 +147,7 @@ class Models(object):
         line_names_: list of line names, only returned if init=True 
         """
 
-        broadlines = Priors.params['broadlines']
+        broadlines = self.priors.params['broadlines']
         lines = []
         # broad
         broad_lines = []
@@ -154,12 +156,12 @@ class Models(object):
    
         
         if init:
-            line_names = self.get_lines(z,Priors.params['halpha_prism'],get_broad=False)
+            line_names = self.get_lines(z,self.priors.params['halpha_prism'],get_broad=False)
             line_names_ = []
             # broad
             
             if broadlines:
-                broad_line_names = self.get_lines(z,Priors.params['halpha_prism'],get_broad=True)
+                broad_line_names = self.get_lines(z,self.priors.params['halpha_prism'],get_broad=True)
                 broad_line_names_ = []
             
             
@@ -181,7 +183,7 @@ class Models(object):
             if (k not in self.lw):
                 continue
             else:
-                line_k = np.zeros(len(Data.spec_wobs))
+                line_k = np.zeros(len(self.data.spec_wobs))
                 for lwk, lrk in zip(self.lw[k], self.lr[k]):
                     line_k += self.emission_line(lwk*(1.+z)/1.e4,
                                                  line_flux=lrk/np.sum(self.lr[k]),
@@ -201,7 +203,7 @@ class Models(object):
                 if kb not in self.lw:
                     continue
                 else:
-                    line_kb = np.zeros(len(Data.spec_wobs))
+                    line_kb = np.zeros(len(self.data.spec_wobs))
                     for lwk, lrk in zip(self.lw[kb], self.lr[kb]):
                         line_kb += self.emission_line(lwk*(1.+z)/1.e4,
                                                      line_flux=lrk/np.sum(self.lr[kb]),
@@ -223,7 +225,7 @@ class Models(object):
             Priors.params['nblines'] = 0
             
         NTEMP = Priors.params['nlines']+Priors.params['nblines']+Priors.params['nspline']
-        flux_arr = np.zeros((NTEMP, Data.NWAVE))
+        flux_arr = np.zeros((NTEMP, self.data.NWAVE))
         
         flux_arr[0:Priors.params['nlines'],:] = np.array(lines)/1.e4
 
@@ -258,7 +260,7 @@ class Models(object):
         # templates = {}
         
         
-        if Data.grating == 'prism':
+        if self.data.grating == 'prism':
             hlines = ['Hb', 'Hg', 'Hd']
             
             if z > 4:
