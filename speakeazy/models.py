@@ -216,29 +216,29 @@ class Models(object):
                         broad_line_names_.append(kb)
                     tline.append(1)
 
-        Priors.params['nlines'] = (np.array(lines).shape)[0]
+        self.priors.params['nlines'] = (np.array(lines).shape)[0]
         # broad
         if broadlines:
-            Priors.params['nblines'] = (np.array(broad_lines).shape)[0] 
+            self.priors.params['nblines'] = (np.array(broad_lines).shape)[0] 
         else:
 
-            Priors.params['nblines'] = 0
+            self.priors.params['nblines'] = 0
             
-        NTEMP = Priors.params['nlines']+Priors.params['nblines']+Priors.params['nspline']
+        NTEMP = self.priors.params['nlines']+self.priors.params['nblines']+self.priors.params['nspline']
         flux_arr = np.zeros((NTEMP, self.data.NWAVE))
         
-        flux_arr[0:Priors.params['nlines'],:] = np.array(lines)/1.e4
+        flux_arr[0:self.priors.params['nlines'],:] = np.array(lines)/1.e4
 
         if broadlines:
 
-            flux_arr[Priors.params['nlines']:Priors.params['nlines']+Priors.params['nblines'],:] = np.array(broad_lines)/1.e4
+            flux_arr[self.priors.params['nlines']:self.priors.params['nlines']+self.priors.params['nblines'],:] = np.array(broad_lines)/1.e4
         
         if init:
-            flux_arr[Priors.params['nlines']+Priors.params['nblines']:,:] = self.bsplines
+            flux_arr[self.priors.params['nlines']+self.priors.params['nblines']:,:] = self.bsplines
             for i in range(self.bsplines.shape[0]):
                 tline.append(2)
         else:
-            flux_arr[Priors.params['nlines']+Priors.params['nblines']:,:] = self.bsplines[self.spl_mask]
+            flux_arr[self.priors.params['nlines']+self.priors.params['nblines']:,:] = self.bsplines[self.spl_mask]
             for i in range(self.bsplines[self.spl_mask].shape[0]):
                     tline.append(2)
 
