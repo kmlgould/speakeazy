@@ -54,62 +54,14 @@ class Models(object):
         get_lines -- get line centers and names of lines 
     """
     
-    def __init__(self,data,priors):
-        
-        try:
-            from msaexp.resample_numba import \
-                resample_template_numba as resample_func
-        except ImportError:
-            from msaexp.resample import resample_template as resample_func
-            
-        self.resample_func = resample_func
-        self.priors = priors
-        self.data = data
-        # make emission line templates as delta functions for now 
-        self.initialize_emission_line()
-        
-    
-        
-    def initialize_emission_line(self, nsamp=64):
-        """
-        Initialize emission line
-        
-        """
-        self.xline = np.linspace(-nsamp, nsamp, 2*nsamp+1)/nsamp*0.1+1
-        self.yline = self.xline*0.
-        self.yline[nsamp] = 1
-        self.yline /= np.trapz(self.yline, self.xline)
-        
-        lw, lr = utils.get_line_wavelengths()
-        self.lw = lw
-        self.lr = lr
-        
-    def emission_line(self, line_um, line_flux=1, scale_disp=1.0, velocity_sigma=100., nsig=4):
-        """
-        Generate emission line 
-        """
-        res = self.resample_func(self.data.spec_wobs,
-                                 self.data.spec_R_fwhm*scale_disp, 
-                                 self.xline*line_um,
-                                 self.yline,
-                                 velocity_sigma=velocity_sigma,
-                                 nsig=nsig)
-        return res*line_flux/line_um
+    def __init__(self) -> None:
+        pass
 
-    def bspline_array(self, nspline=13, log=False):
-        """
-        Generate bspline for continuum models 
-        """
-        bspl = utils.bspline_templates(wave=self.data.spec_wobs*1.e4,
-                                       degree=3,
-                                       df=nspline,
-                                       log=log,
-                                       get_matrix=True
-                                       )
-        return bspl.T
+        # make emission line templates as delta functions for now 
 
     def initialize_bsplines(self):
         """ Make the bspline arrays """
+        """ not sure where this should go, it creates the bspline templates after data and priors are set. in priors maybe? models instance has methods ... make instance first. during fitting. """
         if self.priors.params['nspline'] is not None:
             self.bsplines = self.bspline_array(nspline=self.priors.params['nspline'],log=False) #initialise
         else:
@@ -119,7 +71,7 @@ class Models(object):
 
     def generate_templates(self,z,scale_disp,vel_width,vel_width_b,theta=None,init=False,broadlines=False):
         """
-        Generates gaussian emission line templates.
+        Generates a spectrum template comprised of gaussian emission line templates and continuum based on spline functions 
 
         Parameters 
         ----------
@@ -136,7 +88,7 @@ class Models(object):
         vel_width_b: float
             broad line velocity width km/s
 
-        init: bool
+        init: bool - should depracate this. 
             True if first run, false if used during likelihood fitting and mcmc 
 
         Returns
@@ -144,9 +96,13 @@ class Models(object):
         flux_arr: array [NTEMP, NWAVE] [erg/s/cm2??]
             Array of templates where NTEMP = nsplines + nlines, NWAVE = len(spectrum wavelength array)
 
-        line_names_: list of line names, only returned if init=True 
+        line_names_: list of line names, only returned if init=True - should depracate this. 
         """
 
+        ############################################################################################################
+        ##################### EMISSION LINE TEMPLATES ##############################################################
+        
+        
         broadlines = self.priors.params['broadlines']
         lines = []
         # broad

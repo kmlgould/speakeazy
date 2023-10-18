@@ -73,7 +73,45 @@ class Data(object):
         else:
             print("No photometry found")
 
-        #self.initialize_emission_line()
+        self.initialize_emission_line()
+        
+    def initialize_emission_line(self, nsamp=64):
+        """
+        Initialize emission line
+        
+        """
+        self.xline = np.linspace(-nsamp, nsamp, 2*nsamp+1)/nsamp*0.1+1
+        self.yline = self.xline*0.
+        self.yline[nsamp] = 1
+        self.yline /= np.trapz(self.yline, self.xline)
+        
+        lw, lr = utils.get_line_wavelengths()
+        self.lw = lw
+        self.lr = lr
+        
+    def emission_line(self, line_um, line_flux=1, scale_disp=1.0, velocity_sigma=100., nsig=4):
+        """
+        Generate emission line 
+        """
+        res = self.resample_func(self.spec_wobs,
+                                 self.spec_R_fwhm*scale_disp, 
+                                 self.xline*line_um,
+                                 self.yline,
+                                 velocity_sigma=velocity_sigma,
+                                 nsig=nsig)
+        return res*line_flux/line_um
+    
+    def bspline_array(self, nspline=13, log=False):
+        """
+        Generate bspline for continuum models 
+        """
+        bspl = utils.bspline_templates(wave=self.spec_wobs*1.e4,
+                                       degree=3,
+                                       df=nspline,
+                                       log=log,
+                                       get_matrix=True
+                                       )
+        return bspl.T
         
        
     def initialize_spec(self):
