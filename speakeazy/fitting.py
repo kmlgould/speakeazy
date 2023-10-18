@@ -71,7 +71,7 @@ class Fitting(object):
         
         if isinstance(zfix, float): 
             
-            _A,line_names_,broad_line_names_,tline = Models.generate_templates(zfix,sc,vw,vw_b,theta=self.theta,init=True)
+            _A,line_names_,broad_line_names_,tline = self.models.generate_templates(zfix,sc,vw,vw_b,theta=self.theta,init=True)
         
             okt = _A[:,mask].sum(axis=1) > 0
             _Ax = _A[okt,:]/eflam
