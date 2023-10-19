@@ -33,7 +33,9 @@ class Data(object):
 
         
     Functions:
-        initialize_spec -- Read in 1D spectrum file and create spectrum attributes 
+        initialize_spec -- Read in 1D spectrum file and create spectrum attributes
+        initialize_emission_line -- make delta functions to make into lines
+        emission_line -- generate gaussian emission line that is resampled to observed spectral resolutioon
     """
     
     def __init__(self,spectrum_file,photometry_file,run_ID,phot_id):
@@ -73,9 +75,35 @@ class Data(object):
         else:
             print("No photometry found")
 
-        #self.initialize_emission_line()
+        self.initialize_emission_line()
         
-       
+    def initialize_emission_line(self, nsamp=64):
+        """
+        Initialize emission line
+        
+        """
+        self.xline = np.linspace(-nsamp, nsamp, 2*nsamp+1)/nsamp*0.1+1
+        self.yline = self.xline*0.
+        self.yline[nsamp] = 1
+        self.yline /= np.trapz(self.yline, self.xline)
+        
+        lw, lr = utils.get_line_wavelengths()
+        self.lw = lw
+        self.lr = lr
+        
+    def emission_line(self, line_um, line_flux=1, scale_disp=1.0, velocity_sigma=100., nsig=4):
+        """
+        Generate emission line 
+        """
+        res = self.resample_func(self.spec_wobs,
+                                 self.spec_R_fwhm*scale_disp, 
+                                 self.xline*line_um,
+                                 self.yline,
+                                 velocity_sigma=velocity_sigma,
+                                 nsig=nsig)
+        return res*line_flux/line_um
+
+               
     def initialize_spec(self):
         """
         Read in 1D spectrum file and process key properties

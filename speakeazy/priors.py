@@ -15,23 +15,23 @@ class Priors(object):
         object -- _description_
     """
     
-    def __init__(self,data):
+    def __init__(self,data,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,scale_disp=1.3,z=None,z0=[0.,6.],halpha_prism='free',scale_p=False,broadlines=False):
         lw, lr = utils.get_line_wavelengths()
         self.data = data 
         self.lw = lw
         self.lr = lr
+        self.set_params(fix_ns,nspline,epoly,ppoly,vel_width,vel_width_broad,scale_disp,z,z0,halpha_prism,scale_p,broadlines)    
         
-        #self.set_params()    
-    def set_params(self,fix_ns=True,ns=13,epoly=3,ppoly=3,vw=100.,vw_b=300.,sc=1.3,z=None,z0=[0.,6.],zstep=None,halpha_prism='free',scale_p=False,broadlines=False):
+    def set_params(self,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,scale_disp=1.3,z=None,z0=[0.,6.],halpha_prism='free',scale_p=False,broadlines=False):
         
         self.params = {}
         self.params['z_in'] = z
         self.params['z_range'] = z0
-        self.params['sc']=sc
-        self.params['vw_prior'] = vw
-        self.params['vwb_prior'] = vw_b
+        self.params['scale_disp']=scale_disp
+        self.params['vel_width_prior'] = vel_width
+        self.params['vel_width_broad_prior'] = vel_width_broad
         self.params['fix_ns']=fix_ns
-        self.params['nspline']=ns
+        self.params['nspline']=nspline
         self.params['epoly']=epoly
         self.params['scale_p']=scale_p
         if self.params['scale_p']==True:
