@@ -33,7 +33,9 @@ class Data(object):
 
         
     Functions:
-        initialize_spec -- Read in 1D spectrum file and create spectrum attributes 
+        initialize_spec -- Read in 1D spectrum file and create spectrum attributes
+        initialize_emission_line -- make delta functions to make into lines
+        emission_line -- generate gaussian emission line that is resampled to observed spectral resolutioon
     """
     
     def __init__(self,spectrum_file,photometry_file,run_ID,phot_id):
@@ -100,20 +102,8 @@ class Data(object):
                                  velocity_sigma=velocity_sigma,
                                  nsig=nsig)
         return res*line_flux/line_um
-    
-    def bspline_array(self, nspline=13, log=False):
-        """
-        Generate bspline for continuum models 
-        """
-        bspl = utils.bspline_templates(wave=self.spec_wobs*1.e4,
-                                       degree=3,
-                                       df=nspline,
-                                       log=log,
-                                       get_matrix=True
-                                       )
-        return bspl.T
-        
-       
+
+               
     def initialize_spec(self):
         """
         Read in 1D spectrum file and process key properties

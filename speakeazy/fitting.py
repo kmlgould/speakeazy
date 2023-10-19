@@ -22,7 +22,7 @@ utils.set_warnings()
 
 from pylab import *
 
-from .models import Models
+from .model_spectra import Model
 from .priors import Priors
 from .data import Data
 
@@ -32,33 +32,79 @@ rc('ytick',direction='in')#, minor_visible=True, major_width=1.2, minor_width=1.
 rc('font',size=14)
 plt.rcParams["font.family"] = "serif"
 
-class Fitting(object):
-    """Fitting 
+class Fitter(object):
+    """Fitter
 
-    _extended_summary_
+    Class for fitting spectral data with models. Performs simple nnls chi-squared fitting a la eazy, or 
+    interaces with EMCEE to do priors based sampling. 
+    
 
     Arguments:
-        object -- _description_
+        data -- speakeazy.data 
+                A data object containing spectral data / photometric data to be fit. 
+                
+        priors -- speakeazy.priors
+                Prior object containing fit instructions and priors for fitting. 
+                
+    Attributes:
+    
+    
+    
+    Functions:
+        __fit_redshift -- 
+        
+        init_params -- 
+        
+        fit_spectrum -- 
+        
+        log_likelihood -- 
     """
     
-    def __init__(self,data,priors,models):
+    def __init__(self,data,priors):
+        
+        #check priors have been initialized, if not, set them here 
+        
+        if hasattr(priors,'params'):
+            self.priors = priors
+        else:
+            self.priors = Priors(data)
+            
+         #create model instance which now has data info, prior info and has created splines.
+        
+        self.model = Model(data=data,priors=priors) 
         
         self.data = data
         
         # check there are params in the priors class instance here 
         
-        if hasattr(priors,'params'):
-            self.priors = priors
-            self.params = self.priors.params
-        else:
-            self.priors = Priors(self.data)
-            self.params = self.priors.set_params(self)
+       # if hasattr(priors,'params'):
+       #     self.priors = priors
+       #     self.params = self.priors.params
+       # else:
+       #     self.priors = Priors(self.data)
+       #     self.params = self.priors.set_params(self)
             
-        self.models = models
+      #  self.models = models
         
     
        
-    def __fit_redshift(self,zgrid,zstep,sc,vw,vw_b,zfix=None): 
+    def fit_redshift_grid(self,zgrid,scale_disp=1.3,vel_width=100.,vel_width_broad=1000.,zfix=None): 
+        """__fit_redshift _summary_
+
+        _extended_summary_
+
+        Arguments:
+            zgrid -- _description_
+            sc -- _description_
+            vw -- _description_
+            vw_b -- _description_
+
+        Keyword Arguments:
+            zfix -- _description_ (default: {None})
+
+        Returns:
+            _description_
+        """
         
         mask = self.data.valid
         flam = self.data.spec_fnu*self.data.to_flam
@@ -71,7 +117,7 @@ class Fitting(object):
         
         if isinstance(zfix, float): 
             
-            _A,line_names_,broad_line_names_,tline = self.models.generate_templates(zfix,sc,vw,vw_b,theta=self.theta,init=True)
+            _A,line_names_,broad_line_names_,tline = self.model.generate_templates(zfix,scale_disp=scale_disp,vel_width=vel_width,vel_width_broad=vel_width_broad,theta=None,chisq=True)
         
             okt = _A[:,mask].sum(axis=1) > 0
             _Ax = _A[okt,:]/eflam
@@ -126,7 +172,7 @@ class Fitting(object):
 
             for iz, z in tqdm(enumerate(zgrid)):
 
-                _A,line_names_,broad_line_names_,tline = Models.generate_templates(z,sc,vw,vw_b,theta=self.theta,init=True)
+                _A,line_names_,broad_line_names_,tline = self.model.generate_templates(z,scale_disp=scale_disp,vel_width=vel_width,vel_width_broad=vel_width_broad,theta=None,chisq=True)
 
                 okt = _A[:,mask].sum(axis=1) > 0
                 _Ax = _A[okt,:]/eflam
@@ -148,38 +194,38 @@ class Fitting(object):
         
             return zgrid, chi2
         
-    def init_params(self):
-        # initialise input params for log-likelihood fitting
-           # could also include initial redshift fit? or we put that somewhere else?"""
-        # return self.params which has params either fixed or variable 
-        # if fixed, it has the option of which ones to fix and at which values 
+    def fit_redshift_chisq(self,zstep=0.01):
+        """fit_redshift_chisq _summary_
+
+        _extended_summary_
+        """       
+
         self.theta = None
         self.line_table = None
         self.bline_table = None 
         #self.params = Priors.set_params(self,**input_params)
 
-        escale_coeffs = np.ones(self.params['epoly']) #npoly 
+        escale_coeffs = np.ones(self.priors.params['epoly']) #npoly 
         
-        if self.params['scale_p']==True:
-            pscale_coeffs = np.ones(self.params['ppoly']) # np.ones(ppoly)
+        if self.priors.params['scale_p']==True:
+            pscale_coeffs = np.ones(self.priors.params['ppoly']) # np.ones(ppoly)
         else:
             pscale_coeffs = None
             
-        Models.initialize_bsplines(self.params) #makes continuum splines
-        
+    
         
         is_prism = self.data.grating in ['prism']
 
         # FIT REDSHIFT 
 
             # if input z is given, use that, otherwise use redshift grid 
-        if self.params['z_in'] is not None:
-            print("fix redshift", self.params['z_in'])
-            self.params['zbest']=self.params['z_in']
-            zbest = self.params['z_in']
+        if self.priors.params['z_in'] is not None:
+            print("fix redshift", self.priors.params['z_in'])
+            self.priors.params['zbest']=self.priors.params['z_in']
+            zbest = self.priors.params['z_in']
             zgrid = 1
             zstep = 1
-            _A, coeffs, covard, line_names_,broad_line_names_,tline = self.__fit_redshift(zgrid,zstep,self.params['sc'],self.params['vw'],self.params['vw_b'],zfix=self.params['z_in'])
+            _A, coeffs, covard, line_names_,broad_line_names_,tline = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=self.priors.params['z_in'])
 
         else: 
         
@@ -193,9 +239,9 @@ class Fitting(object):
             else:
                 step0, step1 = zstep
     
-            zgrid = utils.log_zgrid(self.params['z_range'], step0)
+            zgrid = utils.log_zgrid(self.priors.params['z_range'], step0)
             
-            zg0, chi0 = self.__fit_redshift(zgrid,zstep,self.params['sc'],self.params['vw'],self.params['vw_b'],zfix=None)
+            zg0, chi0 = self.__fit_redshift(zgrid,zstep,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=None)
             
             zbest0 = zg0[np.argmin(chi0)]
             
@@ -203,13 +249,13 @@ class Fitting(object):
             zgrid1 = utils.log_zgrid(zbest0 + np.array([-0.005, 0.005])*(1+zbest0), 
                                 step1)
             
-            zg1, chi1 = self.__fit_redshift(zgrid1,zstep,self.params['sc'],self.params['vw'],self.params['vw_b'],zfix=None)
+            zg1, chi1 = self.__fit_redshift(zgrid1,zstep,self.priors.params['sc'],self.priors.params['vw'],self.priors.params['vw_b'],zfix=None)
             
             zbest = zg1[np.argmin(chi1)]
             
-            self.params['zbest']=zbest
+            self.priors.params['zbest']=zbest
         
-            _A, coeffs, covard, line_names_, broad_line_names_,tline = self.__fit_redshift(zgrid1,zstep,self.params['sc'],self.params['vw'],self.params['vw_b'],zfix=zbest)
+            _A, coeffs, covard, line_names_, broad_line_names_,tline = self.fit_redshift_grid(zgrid1,self.priors.params['sc'],self.priors.params['vw'],self.priors.params['vw_b'],zfix=zbest)
         
         self.templates = _A
         #self.tline = tline
@@ -220,7 +266,8 @@ class Fitting(object):
 
         _model = _A.T.dot(coeffs)
         _mline = _A.T.dot(coeffs*nline_mask)
-        if self.params['broadlines']:
+        
+        if self.priors.params['broadlines']:
             _mbline = _A.T.dot(coeffs*nbline_mask)        
             _mcont = _model - _mline - _mbline
             self.model_bline = _mbline
@@ -244,37 +291,40 @@ class Fitting(object):
 
         print(f'full chi2 = {full_chi2}, cont chi2 = {cont_chi2}')
 
-        _Acont = (_A.T*coeffs)[mask,:][:,self.params['nlines']+self.params['nblines']:]
+        _Acont = (_A.T*coeffs)[mask,:][:,self.priors.params['nlines']+self.priors.params['nblines']:]
         _Acont[_Acont < 0.001*_Acont.max()] = np.nan
 
         self.Acont = _Acont
 
         
-        line_coeffs = coeffs[:self.params['nlines']]
-        cont_coeffs = coeffs[self.params['nlines']+self.params['nblines']:]
-        line_covard = covard[:self.params['nlines']]
-        cont_covard = covard[self.params['nlines']+self.params['nblines']:]   
+        line_coeffs = coeffs[:self.priors.params['nlines']]
+        cont_coeffs = coeffs[self.priors.params['nlines']+self.priors.params['nblines']:]
+        line_covard = covard[:self.priors.params['nlines']]
+        cont_covard = covard[self.priors.params['nlines']+self.priors.params['nblines']:]   
 
-        if self.params['broadlines']:
+        if self.priors.params['broadlines']:
 
-            bline_coeffs = coeffs[self.params['nlines']:self.params['nlines']+self.params['nblines']]
-            bline_covard = covard[self.params['nlines']:self.params['nlines']+self.params['nblines']]
+            bline_coeffs = coeffs[self.priors.params['nlines']:self.priors.params['nlines']+self.priors.params['nblines']]
+            bline_covard = covard[self.priors.params['nlines']:self.priors.params['nlines']+self.priors.params['nblines']]
+    
+        ##### MAKE THETA DICTIONARY HERE    
+        
         
         theta_dict = OrderedDict()
         
         theta_dict['z'] = zbest
-        theta_dict['vw'] = self.params['vw']
-        if self.params['broadlines']:
-            theta_dict['vw_b'] = self.params['vw_b']
-        theta_dict['sc']=self.params['sc']
+        theta_dict['vel_width'] = self.priors.params['vel_width']
+        if self.priors.params['broadlines']:
+            theta_dict['vel_width_broad'] = self.priors.params['vel_width_broad']
+        theta_dict['scale_disp']=self.priors.params['scale_disp']
         
-        escale_names = [f'escale_{x}' for x in range(self.params['epoly'])]
+        escale_names = [f'escale_{x}' for x in range(self.priors.params['epoly'])]
         for name,coeff in zip(escale_names,escale_coeffs):
             theta_dict[name]=coeff
 
             
-        if self.params['scale_p']==True:
-            pscale_names = [f'pscale_{x}' for x in range(self.params['ppoly'])]
+        if self.priors.params['scale_p']==True:
+            pscale_names = [f'pscale_{x}' for x in range(self.priors.params['ppoly'])]
             for name,coeff in zip(pscale_names,pscale_coeffs):
                 theta_dict[name]=coeff
 
@@ -284,22 +334,22 @@ class Fitting(object):
          # remove line coeffs that are zero 
         
         line_mask = line_coeffs!=0. 
-        self.params['nlines']=np.sum(line_mask)
+        self.priors.params['nlines']=np.sum(line_mask)
 
 
-        if self.params['broadlines']:
+        if self.priors.params['broadlines']:
             bline_mask = bline_coeffs!=0. 
-            self.params['nblines']=np.sum(line_mask)
+            self.priors.params['nblines']=np.sum(line_mask)
 
 
         spl_mask = cont_coeffs!=0. 
-        self.params['nspline']=np.sum(spl_mask)
+        self.priors.params['nspline']=np.sum(spl_mask)
         self.spl_mask = spl_mask
 
         for name,coeff in zip(np.array(line_names_)[line_mask].tolist(),line_coeffs[line_mask]):
             theta_dict['line '+name]=coeff
 
-        if self.params['broadlines']:
+        if self.priors.params['broadlines']:
 
             for name,coeff in zip(np.array(broad_line_names_)[bline_mask].tolist(),bline_coeffs[bline_mask]):
                 theta_dict['broad line '+name]=coeff
@@ -317,7 +367,7 @@ class Fitting(object):
 
         self.line_table = line_tab
 
-        if self.params['broadlines']:
+        if self.priors.params['broadlines']:
 
             bline_tab = OrderedDict()
             
@@ -366,7 +416,7 @@ class Fitting(object):
                 mspec,_mline,_mbline,_mcont = sp.log_likelihood(soln.x,sp,2)
                 self.model_spec = mspec
                 self.model_line = _mline
-                if self.params['broadlines']:
+                if self.priors.params['broadlines']:
                     self.model_bline = _mbline
                 self.model_cont = _mcont
                 end = time.time()
@@ -390,7 +440,7 @@ class Fitting(object):
         
         # initialise parameters
 
-        broadlines = self.params['broadlines']
+        broadlines = self.priors.params['broadlines']
 
         if broadlines:
         
@@ -402,13 +452,13 @@ class Fitting(object):
             vw_b = 0.
 
         
-        escale_coeffs = theta[npa:npa+self.params['epoly']]
-        pscale_coeffs = theta[npa+self.params['epoly']:npa+self.params['epoly']+self.params['ppoly']]
-        line_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']:npa+self.params['epoly']+self.params['ppoly']+self.params['nlines']] # linecoeffs
-        bline_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']+self.params['nlines']:npa+self.params['epoly']+self.params['ppoly']+self.params['nlines']+self.params['nblines']] # linecoeffs
-        cont_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']+self.params['nlines']+self.params['nblines']:] # the rest are nspline coeffs 
+        escale_coeffs = theta[npa:npa+self.priors.params['epoly']]
+        pscale_coeffs = theta[npa+self.priors.params['epoly']:npa+self.priors.params['epoly']+self.priors.params['ppoly']]
+        line_coeffs = theta[npa+self.priors.params['epoly']+self.priors.params['ppoly']:npa+self.priors.params['epoly']+self.priors.params['ppoly']+self.priors.params['nlines']] # linecoeffs
+        bline_coeffs = theta[npa+self.priors.params['epoly']+self.priors.params['ppoly']+self.priors.params['nlines']:npa+self.priors.params['epoly']+self.priors.params['ppoly']+self.priors.params['nlines']+self.priors.params['nblines']] # linecoeffs
+        cont_coeffs = theta[npa+self.priors.params['epoly']+self.priors.params['ppoly']+self.priors.params['nlines']+self.priors.params['nblines']:] # the rest are nspline coeffs 
         
-        coeffs = theta[npa+self.params['epoly']+self.params['ppoly']:] #line and spline coeffs. 
+        coeffs = theta[npa+self.priors.params['epoly']+self.priors.params['ppoly']:] #line and spline coeffs. 
 
         #print(len(coeffs))
       
@@ -455,7 +505,7 @@ class Fitting(object):
 
 
 
-        if self.params['scale_p']==False:
+        if self.priors.params['scale_p']==False:
             pscale = 1.
             lnphot = 0.
         else:
@@ -496,8 +546,8 @@ class Fitting(object):
             return mspec*pscale,_mline*pscale,_mbline*pscale,_mcont*pscale
         
     def plot_spectrum(self,save=True,fname=None,flat_samples=None,line_snr=5.,show_lines=False,ylims=None,xlims=None):
-        mask = self.data.valid
         
+        mask = self.data.valid
         flam = self.data.spec_fnu*self.data.to_flam
         eflam = self.data.spec_efnu*self.data.to_flam
         
@@ -510,14 +560,12 @@ class Fitting(object):
         xmax = np.nanmax(wav[mask])
 
         plt.figure(figsize=(12,4))
-        #plt.fill_between(wav,(flam+eflam),((flam-eflam)),\
-                                # alpha=0.4,color='cornflowerblue',zorder=-99)
 
         scale=1.
         
-        if (self.params['scale_p']==True):
+        if (self.priors.params['scale_p']==True):
             if (self.theta['pscale_0']!=1.) : 
-                pscale_coeffs = np.array([self.theta[f'pscale_{i}'] for i in range(self.params['ppoly'])])
+                pscale_coeffs = np.array([self.theta[f'pscale_{i}'] for i in range(self.priors.params['ppoly'])])
                 scale = (np.polyval(pscale_coeffs,wav))
             #else:
             #    scale = 1.
