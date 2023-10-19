@@ -28,8 +28,8 @@ class Priors(object):
         self.params['z_in'] = z
         self.params['z_range'] = z0
         self.params['scale_disp']=scale_disp
-        self.params['vel_width_prior'] = vel_width
-        self.params['vel_width_broad_prior'] = vel_width_broad
+        self.params['vel_width'] = vel_width
+        self.params['vel_width_broad'] = vel_width_broad
         self.params['fix_ns']=fix_ns
         self.params['nspline']=nspline
         self.params['epoly']=epoly
@@ -42,7 +42,7 @@ class Priors(object):
         self.params['halpha_prism']=halpha_prism
         self.params['broadlines']=broadlines
 
-    
+    """
     def init_logprior(self):
         from scipy.stats import expon, gamma, norm, uniform
 
@@ -85,7 +85,7 @@ class Priors(object):
         self.hahb_rv = norm(loc=hahb_lr,scale=10.)
         self.hahg_rv = norm(loc=hahg_lr,scale=10.)
         self.hahd_rv = norm(loc=hahd_lr,scale=10.)
-        
+    """
     #vw prior
 
     def vw_prior(self,vw):

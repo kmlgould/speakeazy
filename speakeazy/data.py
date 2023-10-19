@@ -211,20 +211,20 @@ class Data(object):
                 flam_unit = 1.e-19*u.erg/u.second/u.cm**2/u.Angstrom # change to attribute 
                 fnu_unit = 1e-3*u.jansky
                 self.equiv = u.spectral_density(wave*um)
-                to_flam = 1e-3*(1.*fnu_unit).to(flam_unit, equivalencies=self.equiv).value #property 
+                self.to_flam = 1e-3*(1.*fnu_unit).to(flam_unit, equivalencies=self.equiv).value #property 
                 self.flamunit = flam_unit.unit
-                spec_R_fwhm = (np.interp(wave, disp['WAVELENGTH'], disp['R'],
+                self.spec_R_fwhm = (np.interp(wave, disp['WAVELENGTH'], disp['R'],
                                       left=disp['R'][0], right=disp['R'][-1])).astype(np.float32)
-                valid = np.ones(len(wave),dtype='bool')
-                spec_wobs = wave.astype(np.float32)
-                spec_fnu = flux.astype(np.float32)
-                spec_efnu = np.random.normal(0,1,len(flux))
+                self.valid = np.ones(len(wave),dtype='bool')
+                self.spec_wobs = wave.astype(np.float32)
+                self.spec_fnu = flux.astype(np.float32)
+                self.spec_efnu = np.random.normal(0,1,len(flux))
                 self.grating = grating
                 self.filter = _filter
                 
-        @property
-        def NWAVE(self):
-            if spec_wobs is not None:
-                return len(spec_wobs)
-            else:
-                return 0
+    @property
+    def NWAVE(self):
+        if self.spec_wobs is not None:
+            return len(self.spec_wobs)
+        else:
+            return 0

@@ -18,7 +18,6 @@ utils.set_warnings()
 
 # Make what you need from pylab implicit!
 from pylab import *
-
 from .priors import Priors
 
 rc('axes', linewidth=1.5)
@@ -57,6 +56,7 @@ class Model(object):
         self.nspline = priors.params['nspline']
         self.fit_broadlines = priors.params['broadlines']
         self.halpha_prism = priors.params['halpha_prism']
+        
         
         self.spec_wobs = data.spec_wobs
         self.NWAVE = data.NWAVE
@@ -106,7 +106,7 @@ class Model(object):
         return bspl.T
             
 
-    def generate_templates(self,data,z=None,scale_disp=1.3,vel_width=100.,vel_width_broad=1000.,theta=None,chisq=False,broadlines=False):
+    def generate_templates(self,data,z=1.0,scale_disp=1.3,vel_width=100.,vel_width_broad=1000.,theta=None,chisq=False,broadlines=False):
         """
         Generates a spectrum template comprised of gaussian emission line templates and continuum based on spline functions 
 
@@ -209,29 +209,29 @@ class Model(object):
                         broad_line_names_.append(kb)
                     tline.append(1)
 
-        self.priors.params['nlines'] = (np.array(lines).shape)[0]
+        self.nlines= (np.array(lines).shape)[0]
         # broad
         if broadlines:
-            self.priors.params['nblines'] = (np.array(broad_lines).shape)[0] 
+            self.nblines = (np.array(broad_lines).shape)[0] 
         else:
 
-            self.priors.params['nblines'] = 0
+            self.nblines = 0
             
-        NTEMP = self.priors.params['nlines']+self.priors.params['nblines']+self.nspline
-        flux_arr = np.zeros((NTEMP, self.data.NWAVE))
+        NTEMP = self.nlines+self.nblines+self.nspline
+        flux_arr = np.zeros((NTEMP, self.NWAVE))
         
-        flux_arr[0:self.priors.params['nlines'],:] = np.array(lines)/1.e4
+        flux_arr[0:self.nlines,:] = np.array(lines)/1.e4
 
         if broadlines:
 
-            flux_arr[self.priors.params['nlines']:self.priors.params['nlines']+self.priors.params['nblines'],:] = np.array(broad_lines)/1.e4
+            flux_arr[self.nlines:self.nlines+self.nblines,:] = np.array(broad_lines)/1.e4
         
         if chisq:
-            flux_arr[self.priors.params['nlines']+self.priors.params['nblines']:,:] = self.bsplines
+            flux_arr[self.nlines+self.nblines:,:] = self.bsplines
             for i in range(self.bsplines.shape[0]):
                 tline.append(2)
         else:
-            flux_arr[self.priors.params['nlines']+self.priors.params['nblines']:,:] = self.bsplines[self.spl_mask]
+            flux_arr[self.nlines+self.nblines:,:] = self.bsplines[self.spl_mask]
             for i in range(self.bsplines[self.spl_mask].shape[0]):
                     tline.append(2)
 

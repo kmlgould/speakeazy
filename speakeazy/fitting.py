@@ -117,7 +117,7 @@ class Fitter(object):
         
         if isinstance(zfix, float): 
             
-            _A,line_names_,broad_line_names_,tline = self.model.generate_templates(zfix,scale_disp=scale_disp,vel_width=vel_width,vel_width_broad=vel_width_broad,theta=None,chisq=True)
+            _A,line_names_,broad_line_names_,tline = self.model.generate_templates(self.data,zfix,scale_disp,vel_width,vel_width_broad,theta=None,chisq=True)
         
             okt = _A[:,mask].sum(axis=1) > 0
             _Ax = _A[okt,:]/eflam
@@ -172,7 +172,7 @@ class Fitter(object):
 
             for iz, z in tqdm(enumerate(zgrid)):
 
-                _A,line_names_,broad_line_names_,tline = self.model.generate_templates(z,scale_disp=scale_disp,vel_width=vel_width,vel_width_broad=vel_width_broad,theta=None,chisq=True)
+                _A,line_names_,broad_line_names_,tline = self.model.generate_templates(self.data,z,scale_disp,vel_width,vel_width_broad,theta=None,chisq=True)
 
                 okt = _A[:,mask].sum(axis=1) > 0
                 _Ax = _A[okt,:]/eflam
@@ -194,7 +194,7 @@ class Fitter(object):
         
             return zgrid, chi2
         
-    def fit_redshift_chisq(self,zstep=0.01):
+    def fit_redshift_chisq(self,zstep=[0.002,0.0001]):
         """fit_redshift_chisq _summary_
 
         _extended_summary_
@@ -241,7 +241,7 @@ class Fitter(object):
     
             zgrid = utils.log_zgrid(self.priors.params['z_range'], step0)
             
-            zg0, chi0 = self.__fit_redshift(zgrid,zstep,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=None)
+            zg0, chi0 = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=None)
             
             zbest0 = zg0[np.argmin(chi0)]
             
@@ -249,13 +249,13 @@ class Fitter(object):
             zgrid1 = utils.log_zgrid(zbest0 + np.array([-0.005, 0.005])*(1+zbest0), 
                                 step1)
             
-            zg1, chi1 = self.__fit_redshift(zgrid1,zstep,self.priors.params['sc'],self.priors.params['vw'],self.priors.params['vw_b'],zfix=None)
+            zg1, chi1 = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=None)
             
             zbest = zg1[np.argmin(chi1)]
             
             self.priors.params['zbest']=zbest
         
-            _A, coeffs, covard, line_names_, broad_line_names_,tline = self.fit_redshift_grid(zgrid1,self.priors.params['sc'],self.priors.params['vw'],self.priors.params['vw_b'],zfix=zbest)
+            _A, coeffs, covard, line_names_, broad_line_names_,tline = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=zbest)
         
         self.templates = _A
         #self.tline = tline
@@ -291,21 +291,21 @@ class Fitter(object):
 
         print(f'full chi2 = {full_chi2}, cont chi2 = {cont_chi2}')
 
-        _Acont = (_A.T*coeffs)[mask,:][:,self.priors.params['nlines']+self.priors.params['nblines']:]
+        _Acont = (_A.T*coeffs)[mask,:][:,self.model.nlines+self.model.nblines:]
         _Acont[_Acont < 0.001*_Acont.max()] = np.nan
 
         self.Acont = _Acont
 
         
-        line_coeffs = coeffs[:self.priors.params['nlines']]
-        cont_coeffs = coeffs[self.priors.params['nlines']+self.priors.params['nblines']:]
-        line_covard = covard[:self.priors.params['nlines']]
-        cont_covard = covard[self.priors.params['nlines']+self.priors.params['nblines']:]   
+        line_coeffs = coeffs[:self.model.nlines]
+        cont_coeffs = coeffs[self.model.nlines+self.model.nblines:]
+        line_covard = covard[:self.model.nlines]
+        cont_covard = covard[self.model.nlines+self.model.nblines:]   
 
         if self.priors.params['broadlines']:
 
-            bline_coeffs = coeffs[self.priors.params['nlines']:self.priors.params['nlines']+self.priors.params['nblines']]
-            bline_covard = covard[self.priors.params['nlines']:self.priors.params['nlines']+self.priors.params['nblines']]
+            bline_coeffs = coeffs[self.model.nlines:self.model.nlines+self.model.nblines]
+            bline_covard = covard[self.model.nlines:self.model.nlines+self.model.nblines]
     
         ##### MAKE THETA DICTIONARY HERE    
         
@@ -334,12 +334,12 @@ class Fitter(object):
          # remove line coeffs that are zero 
         
         line_mask = line_coeffs!=0. 
-        self.priors.params['nlines']=np.sum(line_mask)
+        self.model.nlines=np.sum(line_mask)
 
 
         if self.priors.params['broadlines']:
             bline_mask = bline_coeffs!=0. 
-            self.priors.params['nblines']=np.sum(line_mask)
+            self.model.nblines=np.sum(line_mask)
 
 
         spl_mask = cont_coeffs!=0. 
@@ -376,8 +376,15 @@ class Fitter(object):
     
             self.bline_table = bline_tab
             
+        for key in self.theta:
+            print(key,":", self.theta[key])
+        #initial_params = np.array(list(self.theta.values()))
+        
+        return
+      
+    """  
     def fit_spectrum(self,ll=False,**kwargs):
-        """ initialises parameters and minimises -log likelihood """
+      
             
         from scipy.optimize import minimize
         np.random.seed(42)
@@ -433,7 +440,7 @@ class Fitter(object):
                 hkl.dump(self.theta, llf)
 
                 self.plot_spectrum(fname=self.ID+'_initial_fit_llh.png',**kwargs)
-                
+    """    
     @staticmethod
     def log_likelihood(theta, self, output):
         # its a static method because theta has to be the first arg in order for scipy minimize to work. 
@@ -454,9 +461,9 @@ class Fitter(object):
         
         escale_coeffs = theta[npa:npa+self.priors.params['epoly']]
         pscale_coeffs = theta[npa+self.priors.params['epoly']:npa+self.priors.params['epoly']+self.priors.params['ppoly']]
-        line_coeffs = theta[npa+self.priors.params['epoly']+self.priors.params['ppoly']:npa+self.priors.params['epoly']+self.priors.params['ppoly']+self.priors.params['nlines']] # linecoeffs
-        bline_coeffs = theta[npa+self.priors.params['epoly']+self.priors.params['ppoly']+self.priors.params['nlines']:npa+self.priors.params['epoly']+self.priors.params['ppoly']+self.priors.params['nlines']+self.priors.params['nblines']] # linecoeffs
-        cont_coeffs = theta[npa+self.priors.params['epoly']+self.priors.params['ppoly']+self.priors.params['nlines']+self.priors.params['nblines']:] # the rest are nspline coeffs 
+        line_coeffs = theta[npa+self.priors.params['epoly']+self.priors.params['ppoly']:npa+self.priors.params['epoly']+self.priors.params['ppoly']+self.model.nlines] # linecoeffs
+        bline_coeffs = theta[npa+self.priors.params['epoly']+self.priors.params['ppoly']+self.model.nlines:npa+self.priors.params['epoly']+self.priors.params['ppoly']+self.model.nlines+self.model.nblines] # linecoeffs
+        cont_coeffs = theta[npa+self.priors.params['epoly']+self.priors.params['ppoly']+self.model.nlines+self.model.nblines:] # the rest are nspline coeffs 
         
         coeffs = theta[npa+self.priors.params['epoly']+self.priors.params['ppoly']:] #line and spline coeffs. 
 
@@ -466,7 +473,7 @@ class Fitter(object):
         # make model for continuum and lines
 
 
-        templ_arr,tline = Models.generate_templates(z,sc,vw,vw_b,theta=self.theta,init=False)
+        templ_arr,tline = self.models.generate_templates(z,sc,vw,vw_b,theta=self.theta,init=False)
 
         
 
@@ -544,6 +551,7 @@ class Fitter(object):
             return -2.*lprob # chi2
         else:
             return mspec*pscale,_mline*pscale,_mbline*pscale,_mcont*pscale
+   
         
     def plot_spectrum(self,save=True,fname=None,flat_samples=None,line_snr=5.,show_lines=False,ylims=None,xlims=None):
         
@@ -559,7 +567,7 @@ class Fitter(object):
         xmin = np.nanmin(wav[mask])
         xmax = np.nanmax(wav[mask])
 
-        plt.figure(figsize=(12,4))
+        fig, ax = plt.subplots(ncols=1,nrows=1,figsize=(12,4))
 
         scale=1.
         
@@ -636,17 +644,17 @@ class Fitter(object):
 
 
             
-        if flat_samples is not None:
-            for sample in flat_samples:
-                mspec = sp.log_likelihood(sample,sp,2)
-                plt.plot(wav,mspec,color='cornflowerblue',lw=0.5,alpha=0.3)
+        #if flat_samples is not None:
+        #    for sample in flat_samples:
+         #       mspec = sp.log_likelihood(sample,sp,2)
+        #        plt.plot(wav,mspec,color='cornflowerblue',lw=0.5,alpha=0.3)
         plt.xlabel(r'Wavelength [$\mu$m]')
         plt.ylabel(r'F$_{\lambda}$ [10$^{-19}$ erg/s/cm$^{2}/\AA$]')
         zb = self.theta['z']
-        plt.title(f'{self.fname}, zspec={zb:.3f}',fontsize=10)
-        #plt.text(x=0.6,y=0.8,s=f'{self.fname}\n z={zb:.3f}',
-         #                        bbox = dict(facecolor = 'white', alpha = 0.5),fontsize=10,
-          #       transform=ax.transAxes)
+        plt.title(f'{self.data.fname}, zspec={zb:.3f}',fontsize=10)
+        plt.text(x=0.6,y=0.8,s=f'{self.data.fname}\n z={zb:.3f}',
+                                 bbox = dict(facecolor = 'white', alpha = 0.5),fontsize=10,
+                 transform=ax.transAxes)
         #plt.grid(alpha=0.6)
         if ylims is not None:
             plt.ylim(ylims[0],ylims[1])
