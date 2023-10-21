@@ -13,6 +13,13 @@ class Priors(object):
 
     Arguments:
         object -- _description_
+        
+    Attributes:
+    
+    
+    Functions:
+    
+    to sample for joint prior distributions, perhaps use either inverse transformation method, or accept reject method. 
     """
     
     def __init__(self,data,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,scale_disp=1.3,z=None,z0=[0.,6.],halpha_prism='free',scale_p=False,broadlines=False):
@@ -42,7 +49,7 @@ class Priors(object):
         self.params['halpha_prism']=halpha_prism
         self.params['broadlines']=broadlines
 
-    """
+    
     def init_logprior(self):
         from scipy.stats import expon, gamma, norm, uniform
 
@@ -76,16 +83,16 @@ class Priors(object):
         # Balmer line ratios for Ha,Hb,Hg,Hd, prior based on case B, ratios from Groves et al. 2011
         # https://arxiv.org/pdf/1109.2597.pdf
 
-        hahb_lr = Models.lr['Balmer 10kK'][0] 
-        hahg_lr = Models.lr['Balmer 10kK'][0]*(1./self.lr['Balmer 10kK'][2])
-        hahd_lr = Models.lr['Balmer 10kK'][0]*(1./self.lr['Balmer 10kK'][3])
+        hahb_lr = self.lr['Balmer 10kK'][0] 
+        hahg_lr = self.lr['Balmer 10kK'][0]*(1./self.lr['Balmer 10kK'][2])
+        hahd_lr = self.lr['Balmer 10kK'][0]*(1./self.lr['Balmer 10kK'][3])
         #print("2.86, 0.47, 0.26")
         #print(hahb_lr,hghb_lr,hdhb_lr)
         
-        self.hahb_rv = norm(loc=hahb_lr,scale=10.)
-        self.hahg_rv = norm(loc=hahg_lr,scale=10.)
-        self.hahd_rv = norm(loc=hahd_lr,scale=10.)
-    """
+        self.hahb_rv = norm(loc=hahb_lr,scale=1.)
+        self.hahg_rv = norm(loc=hahg_lr,scale=1.)
+        self.hahd_rv = norm(loc=hahd_lr,scale=1.)
+    
     #vw prior
 
     def vw_prior(self,vw):
@@ -108,8 +115,6 @@ class Priors(object):
         if np.any(coeffs)<0.:
             return -np.inf 
         return 0.
-
-
 
 
     def escale_prior(self,escale):

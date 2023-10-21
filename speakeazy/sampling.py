@@ -27,14 +27,6 @@ import pathos.multiprocessing as mp
 
 from grizli import utils
 
-from pylab import *
-
-plt.rcParams['axes.linewidth'] = 1.5
-plt.rcParams['xtick.direction'] = 'in' #, minor_visible=True, major_width=1.2, minor_width=1.0)
-plt.rcParams['ytick.direction'] = 'in' #, minor_visible=True, major_width=1.2, minor_width=1.0)
-plt.rcParams['font.size'] =14
-plt.rcParams["font.family"] = "serif"
-
 
 class Sampler(object):
     """Sampler 
@@ -46,7 +38,86 @@ class Sampler(object):
     """
     def __init__(self) -> None:
         pass
+    
+    
+    def sample_from_priors(self,nwalkers,nparam):
+        """sample_from_priors _summary_
 
+        given priors and parameters, sample from the prior distribution for each parameter
+        """
+        
+        prior_matrix = np.zeros([nwalkers,nparam])
+        
+        prior_matrix[:,0] = self.priors.z_rv.rvs(size=nwalkers)
+        prior_matrix[:,1] = self.priors.sc_rv.rvs(size=nwalkers)
+        prior_matrix[:,2] = self.priors.vw_rv.rvs(size=nwalkers)
+        prior_matrix[:,3]= self.priors.vw_b_rv.rvs(size=nwalkers) # but depends on if there are broadlines or not... 
+
+        # something for epoly and ppoly here .... 
+        
+        return prior_matrix
+        
+        
+        
+    
+    def init_walkers(self,walkers_per_param,ball_size):
+        """init_walkers _summary_
+
+        Takes parameter initial positions and priors and initialises the walker matrixes for the EMCEE run. 
+        """
+        
+        # for scale disp, velocity widths, redshift, error scaling, photometry scaling, the walkers are random draws from the prior. 
+        
+        # for the line coefficients, the walkers are random draws from the covariance matrix from the least squares fit. 
+
+        broadlines = self.params['broadlines']
+
+        if broadlines:
+        
+            npa = 4
+        else:
+            npa = 3
+
+            
+        theta = self.theta.values() # parameter values 
+        
+        temps = [self.theta[t] for t in self.theta.keys() if (("line" in t) | ("bspl" in t))] # parameters which have covar. 
+
+        nparam = len(theta) # Todo: this should be a property of the fitting class actually 
+        nwalkers = nparam*walkers_per_param
+    
+        ptb = np.array(list(theta))*ball_size
+        
+        if self.covar_i is not None:
+            print('initalising walkers using covar matrix')
+            
+            initial_walker_matrix = np.zeros([nwalkers,nparam])
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                
+                # initialise line walker positions using covariance matrix from fit 
+                mu = np.random.multivariate_normal(temps, self.covar_i, size=nwalkers)
+                initial_walker_matrix[:,npa+self.params['epoly']+self.params['ppoly']:] = mu
+                
+                # initalise all other parameters - all walkers drawn from prior distributions instead - todo
+                
+                # sample randomly from priors: 
+                
+                
+                initial_walker_matrix[:,:npa+self.params['epoly']+self.params['ppoly']] = np.array(list(theta))[:npa+self.params['epoly']+self.params['ppoly']] + ptb_cv * np.random.randn(nwalkers, npa+self.params['epoly']+self.params['ppoly'])
+                
+                
+                # make sure walkers are started with positive velocity width
+                # Assign replacement values to the zero elements with some noise - draw again from the prior? 
+                initial_walker_matrix[:,1][initial_walker_matrix[:,1] < 0.] = np.random.choice(initial_walker_matrix[:,1][initial_walker_matrix[:,1] > 0.],size=len(initial_walker_matrix[:,1][initial_walker_matrix[:,1] < 0.]),replace=False) + 10.*np.random.randn(len(pos_cv[:,1][pos_cv[:,1] < 0.]))
+                
+        else:
+            initial_walker_matrix = np.array(list(theta)) + ptb * np.random.randn(nwalkers, nparam)
+            #fpos[:,1] = np.array(list(theta))[1] + ptb_cv[1]*np.random.gamma(nwalkers,1)
+            
+        return initial_walker_matrix
+    # depracated
 
     def make_mcmc_draws(self,wp,init=[1e-3,0.2,1e-3,1e-2]):
         # wp = walkers per parameter
