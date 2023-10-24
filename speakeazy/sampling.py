@@ -46,7 +46,8 @@ class Sampler(object):
         norm_prior = norm(loc=mean,scale=sigma)
         if sample:
             return norm.prior.rvs(size=nwalkers)
-        return norm_prior
+        else:
+            return norm_prior
     
     def sample_from_priors(self,nwalkers,nparam,npa):
         """sample_from_priors _summary_
@@ -114,7 +115,7 @@ class Sampler(object):
         nparam = len(theta) # Todo: this should be a property of the fitting class actually 
         nwalkers = nparam*walkers_per_param
     
-        ptb = np.array(list(theta))*ball_size
+        
         
         if self.covar_i is not None:
             print('initalising walkers using covar matrix')
@@ -130,7 +131,7 @@ class Sampler(object):
                 
                 # sample randomly from priors: 
                 
-                initial_walker_matrix[:,:npa+self.params['epoly']+self.params['ppoly']] = self.sample_from_priors(nwalkers=nwalkers,nparam=nparam,npa=npa)
+                initial_walker_matrix[:,:npa+self.params['epoly']+self.params['ppoly']] = self.sample_from_priors(nwalkers,nparam,npa)
                 
                 #initial_walker_matrix[:,:npa+self.params['epoly']+self.params['ppoly']] = np.array(list(theta))[:npa+self.params['epoly']+self.params['ppoly']] + ptb_cv * np.random.randn(nwalkers, npa+self.params['epoly']+self.params['ppoly'])
                 
@@ -140,12 +141,13 @@ class Sampler(object):
                 #initial_walker_matrix[:,1][initial_walker_matrix[:,1] < 0.] = np.random.choice(initial_walker_matrix[:,1][initial_walker_matrix[:,1] > 0.],size=len(initial_walker_matrix[:,1][initial_walker_matrix[:,1] < 0.]),replace=False) + 10.*np.random.randn(len(pos_cv[:,1][pos_cv[:,1] < 0.]))
                 
         else:
+            ptb = np.array(list(theta))*ball_size
             initial_walker_matrix = np.array(list(theta)) + ptb * np.random.randn(nwalkers, nparam)
             #fpos[:,1] = np.array(list(theta))[1] + ptb_cv[1]*np.random.gamma(nwalkers,1)
             
         return initial_walker_matrix
+   
     # depracated
-
     def make_mcmc_draws(self,wp,init=[1e-3,0.2,1e-3,1e-2]):
         # wp = walkers per parameter
         # initalise walkers for emcee run 
