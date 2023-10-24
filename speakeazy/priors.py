@@ -59,23 +59,20 @@ class Priors(object):
         else:
             zscale = 0.1
             sc_scale = 0.5
-            
-        vw_scale = 1.
-        vw_b_scale = 1.
-        epscale = 0.1
 
-        if self.params['broadlines']:
-            self.prior_widths = [1e-3,1.,1.,sc_scale,epscale]
-        else:
-            if Data.grating == "prism":
-                self.prior_widths = [1e-3,1.,sc_scale,epscale]
-            else:
-                self.prior_widths = [1e-3,10.,sc_scale,epscale]
+
+       # if self.params['broadlines']:
+       #     self.prior_widths = [1e-3,1.,1.,sc_scale,epscale]
+       # else:
+       #     if Data.grating == "prism":
+       #         self.prior_widths = [1e-3,1.,sc_scale,epscale]
+       #     else:
+       #         self.prior_widths = [1e-3,10.,sc_scale,epscale]
         self.z_rv = norm(loc=self.params['zbest'],scale=zscale)
         self.vw_rv = uniform(loc=0.,scale=1000.)
         self.vwb_rv = uniform(loc=1000.,scale=5000.)
-        self.escale_rv=norm(loc=1.,scale=epscale)
-        self.sc_rv = norm(loc=self.params['sc'],scale=sc_scale)
+        self.escale_rv=uniform(loc=1.,scale=3.)
+        self.sc_rv = norm(loc=self.params['scale_disp'],scale=sc_scale)
         #self.sc_rv = uniform(loc=1.,scale=1.)
 
         

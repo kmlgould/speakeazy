@@ -36,11 +36,19 @@ class Sampler(object):
     Arguments:
         object -- _description_
     """
-    def __init__(self) -> None:
-        pass
+    def __init__(self,data,params):
+        self.data = data
+        self.params = params 
     
+    @staticmethod
+    def make_norm_prior(mean=0.,sigma=1.,nwalkers=100,sample=False):
+        from scipy.stats import norm
+        norm_prior = norm(loc=mean,scale=sigma)
+        if sample:
+            return norm.prior.rvs(size=nwalkers)
+        return norm_prior
     
-    def sample_from_priors(self,nwalkers,nparam):
+    def sample_from_priors(self,nwalkers,nparam,npa):
         """sample_from_priors _summary_
 
         given priors and parameters, sample from the prior distribution for each parameter
@@ -51,16 +59,36 @@ class Sampler(object):
         prior_matrix[:,0] = self.priors.z_rv.rvs(size=nwalkers)
         prior_matrix[:,1] = self.priors.sc_rv.rvs(size=nwalkers)
         prior_matrix[:,2] = self.priors.vw_rv.rvs(size=nwalkers)
-        prior_matrix[:,3]= self.priors.vw_b_rv.rvs(size=nwalkers) # but depends on if there are broadlines or not... 
+        
+        if npa==4:
+            prior_matrix[:,3]= self.priors.vw_b_rv.rvs(size=nwalkers) # but depends on if there are broadlines or not... 
 
+        else:
+            None 
+        
         # something for epoly and ppoly here .... 
+        
+        # get coeffs for polyfit to straight line - which is average prior, then set coeffs on tight gaussians. 
+        
+        o = self.params['epoly'] - 1 # defined as ncoeffs instead of order, which is backwards and should be changed. 
+        y = np.random.sample(size=len(self.data.spec_wobs))+2. # error scaling should be around 1-3. 
+        c, __ = np.polynomial.polyfit(self.data.spec_wobs,y,o,full=True)
+        
+        for i in range(len(self.param['epoly'])):
+            prior_matrix[:,npa+i+1] = self.make_norm_prior(c[i],sigma=0.1*c[i],nwalkers=nwalkers,sample=True)
+            
+        if prior_matrix.size==(nwalkers,nparam):
+            print('it worked')
+            
+        # doesn't include photometry scaling right now. 
+        
         
         return prior_matrix
         
         
         
     
-    def init_walkers(self,walkers_per_param,ball_size):
+    def init_walkers(self,walkers_per_param=3,ball_size=1e-3):
         """init_walkers _summary_
 
         Takes parameter initial positions and priors and initialises the walker matrixes for the EMCEE run. 
@@ -97,20 +125,19 @@ class Sampler(object):
                 warnings.simplefilter("ignore")
                 
                 # initialise line walker positions using covariance matrix from fit 
-                mu = np.random.multivariate_normal(temps, self.covar_i, size=nwalkers)
-                initial_walker_matrix[:,npa+self.params['epoly']+self.params['ppoly']:] = mu
-                
+                initial_walker_matrix[:,npa+self.params['epoly']+self.params['ppoly']:] = np.random.multivariate_normal(temps, self.covar_i, size=nwalkers)
                 # initalise all other parameters - all walkers drawn from prior distributions instead - todo
                 
                 # sample randomly from priors: 
                 
+                initial_walker_matrix[:,:npa+self.params['epoly']+self.params['ppoly']] = self.sample_from_priors(nwalkers=nwalkers,nparam=nparam,npa=npa)
                 
-                initial_walker_matrix[:,:npa+self.params['epoly']+self.params['ppoly']] = np.array(list(theta))[:npa+self.params['epoly']+self.params['ppoly']] + ptb_cv * np.random.randn(nwalkers, npa+self.params['epoly']+self.params['ppoly'])
+                #initial_walker_matrix[:,:npa+self.params['epoly']+self.params['ppoly']] = np.array(list(theta))[:npa+self.params['epoly']+self.params['ppoly']] + ptb_cv * np.random.randn(nwalkers, npa+self.params['epoly']+self.params['ppoly'])
                 
                 
                 # make sure walkers are started with positive velocity width
                 # Assign replacement values to the zero elements with some noise - draw again from the prior? 
-                initial_walker_matrix[:,1][initial_walker_matrix[:,1] < 0.] = np.random.choice(initial_walker_matrix[:,1][initial_walker_matrix[:,1] > 0.],size=len(initial_walker_matrix[:,1][initial_walker_matrix[:,1] < 0.]),replace=False) + 10.*np.random.randn(len(pos_cv[:,1][pos_cv[:,1] < 0.]))
+                #initial_walker_matrix[:,1][initial_walker_matrix[:,1] < 0.] = np.random.choice(initial_walker_matrix[:,1][initial_walker_matrix[:,1] > 0.],size=len(initial_walker_matrix[:,1][initial_walker_matrix[:,1] < 0.]),replace=False) + 10.*np.random.randn(len(pos_cv[:,1][pos_cv[:,1] < 0.]))
                 
         else:
             initial_walker_matrix = np.array(list(theta)) + ptb * np.random.randn(nwalkers, nparam)
