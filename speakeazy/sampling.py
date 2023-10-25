@@ -243,7 +243,7 @@ class Sampler(object):
         #print(pscale_coeffs)
         # make model for continuum and lines
 
-        templ_arr,tline = self.fit_object.model.generate_templates(self.data,z,sc,vw,vw_b,theta,chisq=False)
+        templ_arr,tline = self.model.generate_templates(self.data,z,sc,vw,vw_b,theta,chisq=False)
 
         
 
