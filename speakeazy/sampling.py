@@ -45,7 +45,7 @@ class Sampler(object):
         from scipy.stats import norm
         norm_prior = norm(loc=mean,scale=sigma)
         if sample:
-            return norm.prior.rvs(size=nwalkers)
+            return norm_prior.rvs(size=nwalkers)
         else:
             return norm_prior
     
