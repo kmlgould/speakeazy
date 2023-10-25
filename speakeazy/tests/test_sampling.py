@@ -29,7 +29,7 @@ class TestSampler():
         norm_prior_test = norm(loc=0.,scale=1.)
         norm_prior_sample = norm_prior_test.rvs(size=100)
         
-        norm_prior = self.sampler.make_norm_prior(sampling=True)
+        norm_prior = self.sampler.make_norm_prior(sample=True)
         
         assert np.allclose(norm_prior_sample,norm_prior,tol=1e-3)
 
