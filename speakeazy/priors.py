@@ -69,7 +69,7 @@ class Priors(object):
        #         self.prior_widths = [1e-3,1.,sc_scale,epscale]
        #     else:
        #         self.prior_widths = [1e-3,10.,sc_scale,epscale]
-        self.z_rv = norm(loc=self.params['zbest'],scale=zscale)
+        self.z_rv = norm(loc=1.,scale=zscale)
         self.vw_rv = uniform(loc=0.,scale=1000.)
         self.vwb_rv = uniform(loc=1000.,scale=5000.)
         self.escale_rv=uniform(loc=1.,scale=3.)

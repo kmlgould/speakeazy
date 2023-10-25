@@ -60,7 +60,13 @@ class Sampler(object):
         
         prior_matrix = np.zeros([nwalkers,nparam])
         
-        prior_matrix[:,0] = self.prior.z_rv.rvs(size=nwalkers)
+        if self.data.grating != "prism":
+            zscale = 0.0001
+
+        else:
+            zscale = 0.1
+        
+        prior_matrix[:,0] = self.make_norm_prior(self.params['zbest'],zscale,nwalkers,sample=True)
         prior_matrix[:,1] = self.prior.sc_rv.rvs(size=nwalkers)
         prior_matrix[:,2] = self.prior.vw_rv.rvs(size=nwalkers)
         
@@ -79,7 +85,7 @@ class Sampler(object):
         c, __ = np.polynomial.polyfit(self.data.spec_wobs,y,o,full=True)
         
         for i in range(len(self.param['epoly'])):
-            prior_matrix[:,npa+i+1] = self.make_norm_prior(c[i],sigma=0.1*c[i],nwalkers=nwalkers,sample=True)
+            prior_matrix[:,npa+i+1] = self.make_norm_prior(mean=c[i],sigma=0.1*c[i],nwalkers=nwalkers,sample=True)
             
         # doesn't include photometry scaling right now. 
         
