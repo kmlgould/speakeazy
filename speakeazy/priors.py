@@ -13,6 +13,13 @@ class Priors(object):
 
     Arguments:
         object -- _description_
+        
+    Attributes:
+    
+    
+    Functions:
+    
+    to sample for joint prior distributions, perhaps use either inverse transformation method, or accept reject method. 
     """
     
     def __init__(self,data,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,scale_disp=1.3,z=None,z0=[0.,6.],halpha_prism='free',scale_p=False,broadlines=False):
@@ -21,8 +28,9 @@ class Priors(object):
         self.lw = lw
         self.lr = lr
         self.set_params(fix_ns,nspline,epoly,ppoly,vel_width,vel_width_broad,scale_disp,z,z0,halpha_prism,scale_p,broadlines)    
+        self.init_logprior()
         
-    def set_params(self,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,scale_disp=1.3,z=None,z0=[0.,6.],halpha_prism='free',scale_p=False,broadlines=False):
+    def set_params(self,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,scale_disp=1.3,z=None,z0=[1.4,1.5],halpha_prism='free',scale_p=False,broadlines=False):
         
         self.params = {}
         self.params['z_in'] = z
@@ -42,7 +50,7 @@ class Priors(object):
         self.params['halpha_prism']=halpha_prism
         self.params['broadlines']=broadlines
 
-    """
+    
     def init_logprior(self):
         from scipy.stats import expon, gamma, norm, uniform
 
@@ -52,23 +60,20 @@ class Priors(object):
         else:
             zscale = 0.1
             sc_scale = 0.5
-            
-        vw_scale = 1.
-        vw_b_scale = 1.
-        epscale = 0.1
 
-        if self.params['broadlines']:
-            self.prior_widths = [1e-3,1.,1.,sc_scale,epscale]
-        else:
-            if Data.grating == "prism":
-                self.prior_widths = [1e-3,1.,sc_scale,epscale]
-            else:
-                self.prior_widths = [1e-3,10.,sc_scale,epscale]
-        self.z_rv = norm(loc=self.params['zbest'],scale=zscale)
+
+       # if self.params['broadlines']:
+       #     self.prior_widths = [1e-3,1.,1.,sc_scale,epscale]
+       # else:
+       #     if Data.grating == "prism":
+       #         self.prior_widths = [1e-3,1.,sc_scale,epscale]
+       #     else:
+       #         self.prior_widths = [1e-3,10.,sc_scale,epscale]
+        self.z_rv = norm(loc=1.,scale=zscale)
         self.vw_rv = uniform(loc=0.,scale=1000.)
         self.vwb_rv = uniform(loc=1000.,scale=5000.)
-        self.escale_rv=norm(loc=1.,scale=epscale)
-        self.sc_rv = norm(loc=self.params['sc'],scale=sc_scale)
+        self.escale_rv=uniform(loc=1.,scale=3.)
+        self.sc_rv = norm(loc=self.params['scale_disp'],scale=sc_scale)
         #self.sc_rv = uniform(loc=1.,scale=1.)
 
         
@@ -76,16 +81,16 @@ class Priors(object):
         # Balmer line ratios for Ha,Hb,Hg,Hd, prior based on case B, ratios from Groves et al. 2011
         # https://arxiv.org/pdf/1109.2597.pdf
 
-        hahb_lr = Models.lr['Balmer 10kK'][0] 
-        hahg_lr = Models.lr['Balmer 10kK'][0]*(1./self.lr['Balmer 10kK'][2])
-        hahd_lr = Models.lr['Balmer 10kK'][0]*(1./self.lr['Balmer 10kK'][3])
+        hahb_lr = self.lr['Balmer 10kK'][0] 
+        hahg_lr = self.lr['Balmer 10kK'][0]*(1./self.lr['Balmer 10kK'][2])
+        hahd_lr = self.lr['Balmer 10kK'][0]*(1./self.lr['Balmer 10kK'][3])
         #print("2.86, 0.47, 0.26")
         #print(hahb_lr,hghb_lr,hdhb_lr)
         
-        self.hahb_rv = norm(loc=hahb_lr,scale=10.)
-        self.hahg_rv = norm(loc=hahg_lr,scale=10.)
-        self.hahd_rv = norm(loc=hahd_lr,scale=10.)
-    """
+        self.hahb_rv = norm(loc=hahb_lr,scale=1.)
+        self.hahg_rv = norm(loc=hahg_lr,scale=1.)
+        self.hahd_rv = norm(loc=hahd_lr,scale=1.)
+    
     #vw prior
 
     def vw_prior(self,vw):
@@ -108,8 +113,6 @@ class Priors(object):
         if np.any(coeffs)<0.:
             return -np.inf 
         return 0.
-
-
 
 
     def escale_prior(self,escale):

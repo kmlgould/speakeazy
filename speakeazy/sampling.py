@@ -27,14 +27,6 @@ import pathos.multiprocessing as mp
 
 from grizli import utils
 
-from pylab import *
-
-plt.rcParams['axes.linewidth'] = 1.5
-plt.rcParams['xtick.direction'] = 'in' #, minor_visible=True, major_width=1.2, minor_width=1.0)
-plt.rcParams['ytick.direction'] = 'in' #, minor_visible=True, major_width=1.2, minor_width=1.0)
-plt.rcParams['font.size'] =14
-plt.rcParams["font.family"] = "serif"
-
 
 class Sampler(object):
     """Sampler 
@@ -44,10 +36,131 @@ class Sampler(object):
     Arguments:
         object -- _description_
     """
-    def __init__(self) -> None:
-        pass
+    def __init__(self,data,prior,fit_object):
+        self.data = data
+        self.prior = prior
+        self.params = prior.params
+        self.theta = fit_object.theta
+        self.covar_i = fit_object.covar_i
+        self.model = fit_object.model
+        self.model.spl_mask = fit_object.spl_mask
+    
+    @staticmethod
+    def make_norm_prior(mean=0.,sigma=1.,nwalkers=1000,sample=False):
+        from scipy.stats import norm
+        norm_prior = norm(loc=mean,scale=sigma)
+        if sample:
+            return norm_prior.rvs(size=nwalkers)
+        else:
+            return norm_prior
+    
+    def sample_from_priors(self,nwalkers,nparam,npa):
+        """sample_from_priors _summary_
 
+        given priors and parameters, sample from the prior distribution for each parameter
+        """
+        
+        nparam_i = npa+self.params['epoly']+self.params['ppoly']
+        
+        prior_matrix = np.zeros([nwalkers,nparam_i])
+        
+        if self.data.grating != "prism":
+            zscale = 0.0001
 
+        else:
+            zscale = 0.1
+            
+        self.prior.z_rv = self.make_norm_prior(self.params['zbest'],zscale,sample=False)
+        
+        prior_matrix[:,0] = self.make_norm_prior(self.params['zbest'],zscale,nwalkers,sample=True)
+        prior_matrix[:,1] = self.prior.sc_rv.rvs(size=nwalkers)
+        prior_matrix[:,2] = self.prior.vw_rv.rvs(size=nwalkers)
+        
+        if npa==4:
+            prior_matrix[:,3]= self.prior.vw_b_rv.rvs(size=nwalkers) # but depends on if there are broadlines or not... 
+
+        else:
+            None 
+        
+        # something for epoly and ppoly here .... 
+        
+        # get coeffs for polyfit to straight line - which is average prior, then set coeffs on tight gaussians. 
+        
+        o = self.params['epoly'] - 1 # defined as ncoeffs instead of order, which is backwards and should be changed. 
+        y = np.random.sample(size=len(self.data.spec_wobs))+2. # error scaling should be around 1-3. 
+        c = np.polyfit(self.data.spec_wobs,y,o)
+        
+        for i in range(self.params['epoly']):
+            prior_matrix[:,npa+i] = self.make_norm_prior(mean=c[i],sigma=0.1*abs(c[i]),nwalkers=nwalkers,sample=True)
+            
+        # doesn't include photometry scaling right now. 
+        
+        
+        return prior_matrix
+        
+        
+        
+    
+    def init_walkers(self,walkers_per_param=3,ball_size=1e-3):
+        """init_walkers _summary_
+
+        Takes parameter initial positions and priors and initialises the walker matrixes for the EMCEE run. 
+        """
+        
+        # for scale disp, velocity widths, redshift, error scaling, photometry scaling, the walkers are random draws from the prior. 
+        
+        # for the line coefficients, the walkers are random draws from the covariance matrix from the least squares fit. 
+
+        broadlines = self.params['broadlines']
+
+        if broadlines:
+        
+            npa = 4
+        else:
+            npa = 3
+
+            
+        theta = self.theta.values() # parameter values 
+        
+        temps = [self.theta[t] for t in self.theta.keys() if (("line" in t) | ("bspl" in t))] # parameters which have covar. 
+
+        nparam = len(theta) # Todo: this should be a property of the fitting class actually 
+        nwalkers = nparam*walkers_per_param
+    
+        
+        
+        if self.covar_i is not None:
+            print('initalising walkers using covar matrix')
+            
+            initial_walker_matrix = np.zeros([nwalkers,nparam])
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                
+                # initialise line walker positions using covariance matrix from fit 
+                initial_walker_matrix[:,npa+self.params['epoly']+self.params['ppoly']:] = np.random.multivariate_normal(temps, self.covar_i, size=nwalkers)
+                # initalise all other parameters - all walkers drawn from prior distributions instead - todo
+                
+                # sample randomly from priors: 
+                
+                initial_walker_matrix[:,:npa+self.params['epoly']+self.params['ppoly']] = self.sample_from_priors(nwalkers,nparam,npa)
+                print(initial_walker_matrix)
+                
+                #initial_walker_matrix[:,:npa+self.params['epoly']+self.params['ppoly']] = np.array(list(theta))[:npa+self.params['epoly']+self.params['ppoly']] + ptb_cv * np.random.randn(nwalkers, npa+self.params['epoly']+self.params['ppoly'])
+                
+                
+                # make sure walkers are started with positive velocity width
+                # Assign replacement values to the zero elements with some noise - draw again from the prior? 
+                #initial_walker_matrix[:,1][initial_walker_matrix[:,1] < 0.] = np.random.choice(initial_walker_matrix[:,1][initial_walker_matrix[:,1] > 0.],size=len(initial_walker_matrix[:,1][initial_walker_matrix[:,1] < 0.]),replace=False) + 10.*np.random.randn(len(pos_cv[:,1][pos_cv[:,1] < 0.]))
+                
+        else:
+            ptb = np.array(list(theta))*ball_size
+            initial_walker_matrix = np.array(list(theta)) + ptb * np.random.randn(nwalkers, nparam)
+            #fpos[:,1] = np.array(list(theta))[1] + ptb_cv[1]*np.random.gamma(nwalkers,1)
+            
+        return initial_walker_matrix
+   
+    # depracated
     def make_mcmc_draws(self,wp,init=[1e-3,0.2,1e-3,1e-2]):
         # wp = walkers per parameter
         # initalise walkers for emcee run 
@@ -120,9 +233,9 @@ class Sampler(object):
         
         escale_coeffs = theta[npa:npa+self.params['epoly']]
         pscale_coeffs = theta[npa+self.params['epoly']:npa+self.params['epoly']+self.params['ppoly']]
-        line_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']:npa+self.params['epoly']+self.params['ppoly']+self.params['nlines']] # linecoeffs
-        bline_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']+self.params['nlines']:npa+self.params['epoly']+self.params['ppoly']+self.params['nlines']+self.params['nblines']] # linecoeffs
-        cont_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']+self.params['nlines']+self.params['nblines']:] # the rest are nspline coeffs 
+        line_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']:npa+self.params['epoly']+self.params['ppoly']+self.model.nlines] # linecoeffs
+        bline_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']+self.model.nlines:npa+self.params['epoly']+self.params['ppoly']+self.model.nlines+self.model.nblines] # linecoeffs
+        cont_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']+self.model.nlines+self.model.nblines:] # the rest are nspline coeffs 
         
         coeffs = theta[npa+self.params['epoly']+self.params['ppoly']:] #line and spline coeffs. 
 
@@ -131,7 +244,7 @@ class Sampler(object):
         #print(pscale_coeffs)
         # make model for continuum and lines
 
-        templ_arr,tline = self.generate_templates(z,sc,vw,vw_b,init=False)
+        templ_arr,tline = self.model.generate_templates(self.data,z,sc,vw,vw_b,self.theta,chisq=False)
 
         
 
@@ -154,13 +267,13 @@ class Sampler(object):
             _mcont = mspec - _mline
             _mbline = 0.
             
-        xr = spec_wobs
+        xr = self.data.spec_wobs
         xr_ang = xr*1e4
 
         
-        mask = valid
-        flam = spec_fnu*to_flam
-        eflam = spec_efnu*to_flam
+        mask = self.data.valid
+        flam = self.data.spec_fnu*self.data.to_flam
+        eflam = self.data.spec_efnu*self.data.to_flam
 
         
         
@@ -189,9 +302,9 @@ class Sampler(object):
 
         lnp =  -0.5 * (((flam - mspec) ** 2. / e2) + (np.log(2.*np.pi*e2)))[mask].sum() #removed neg, makes it -ln(P), minimize
         if broadlines:
-            logprior = self.z_rv.logpdf(z) + self.escale_prior(escale) + self.sc_prior(sc) + self.vw_prior(vw) + self.vwb_prior(vw_b) + self.coeffs_prior(coeffs) #+self.balmer_ratios_prior(line_fluxes)
+            logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.vwb_prior(vw_b) + self.prior.coeffs_prior(coeffs) #+self.balmer_ratios_prior(line_fluxes)
         else:
-            logprior = self.z_rv.logpdf(z) + self.escale_prior(escale) + self.sc_prior(sc) + self.vw_prior(vw)
+            logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.coeffs_prior(coeffs)
         lprob = lnp + logprior + lnphot
 
         if np.isnan(lprob):
@@ -201,7 +314,7 @@ class Sampler(object):
 
         return lprob
     
-    def run_emcee(self,n_it=100,wp=3,nds=8,zin=1e-3,mp=False):
+    def run_emcee(self,n_it=100,wp=3,nds=4,zin=1e-3,mp=True):
         
 #         snx = self.theta.values()
         
@@ -212,36 +325,23 @@ class Sampler(object):
 #         # instead sample from covariance draws 
 #         pos = np.array(list(snx))
 
-        pos = self.make_mcmc_draws(wp=wp,init=[zin,0.2,1e-3,1e-2])
+        pos = self.init_walkers(walkers_per_param=wp)
         print(pos)
         nwalkers, ndim = pos.shape
         print(nwalkers,ndim)
         
         # Set up the backend
         # Don't forget to clear it in case the file already exists
-        filename = self.ID+"_emcee_run.h5"
+        filename = str(self.data.run_ID)+"_emcee_run.h5"
         print(filename)
         backend = emcee.backends.HDFBackend(filename)
         backend.reset(nwalkers, ndim)
 
         
         if mp:
-            
-             # Pool gets stuck with class methods because it uses pickle, which can't pickle instances. 
-             # this is an attempted work around, using dill, which can serialize basically anything. 
-            #import multiprocessing_on_dill as multiprocessing
-            #from multiprocessing_on_dill import Pool
-            #multiprocessing.set_start_method("fork")
-            #os.system("taskset -p 0xff %d" % os.getpid())
             import pathos.multiprocessing as multiproc
             mp_pool = multiproc.ProcessPool(nodes=nds)
-            #sampler = emcee.EnsembleSampler(nwalkers, ndim, sp.log_likelihood, args = (sp,0), pool=pool)
-            #start = time.time()
-            #sampler.run_mcmc(pos, n_it, progress=True)
-            #end = time.time()
-            #multi_time = end - start
-            #print("Multiprocessing took {0:.1f} seconds".format(multi_time))
-           
+         
             with mp_pool as pool:
                 
                 sampler = emcee.EnsembleSampler(nwalkers, ndim, self.log_prob_data_global, pool=pool,backend=backend)
@@ -293,7 +393,7 @@ class Sampler(object):
         else: 
 
             sampler = emcee.EnsembleSampler(
-                    nwalkers, ndim, sp.log_likelihood, args = (sp,0))
+                    nwalkers, ndim, self.log_prob_data_global)
             sampler.run_mcmc(pos, n_it, progress=True);
         
         #flat_samples = sampler.get_chain(discard=0, thin=1, flat=True)
