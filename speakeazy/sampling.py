@@ -41,7 +41,7 @@ class Sampler(object):
         self.params = params 
     
     @staticmethod
-    def make_norm_prior(mean=0.,sigma=1.,nwalkers=100,sample=False):
+    def make_norm_prior(mean=0.,sigma=1.,nwalkers=1000,sample=False):
         from scipy.stats import norm
         norm_prior = norm(loc=mean,scale=sigma)
         if sample:

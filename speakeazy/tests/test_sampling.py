@@ -27,7 +27,7 @@ class TestSampler():
         from scipy.stats import norm 
         
         norm_prior_dist = norm(loc=0.,scale=1.)
-        norm_prior_test = norm_prior_dist.rvs(size=100)
+        norm_prior_test = norm_prior_dist.rvs(size=1000)
         
         norm_prior_code = self.sampler.make_norm_prior(sample=True)
         
