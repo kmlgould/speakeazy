@@ -26,13 +26,18 @@ class TestSampler():
         
         from scipy.stats import norm 
         
-        norm_prior_test = norm(loc=0.,scale=1.)
-        norm_prior_sample = norm_prior_test.rvs(size=100)
+        norm_prior_dist = norm(loc=0.,scale=1.)
+        norm_prior_test = norm_prior_dist.rvs(size=100)
         
-        norm_prior = self.sampler.make_norm_prior(sample=True)
+        norm_prior_code = self.sampler.make_norm_prior(sample=True)
         
-        print(norm_prior_sample,norm_prior)
-        assert np.allclose(norm_prior_sample,norm_prior,rtol=1e-3)
+        test_mean = np.mean(norm_prior_test)
+        code_mean = np.mean(norm_prior_code)
+        test_std = np.std(norm_prior_test)
+        code_std = np.std(norm_prior_code)
+        
+        assert np.allclose(test_mean,code_mean,rtol=1e-1)
+        assert np.allclose(test_std,code_std,rtol=1e-1)
 
         # test generation of walkers based on priors - FINISH THIS 
         #nwalkers = 100
