@@ -140,6 +140,7 @@ class Sampler(object):
                 # sample randomly from priors: 
                 
                 initial_walker_matrix[:,:npa+self.params['epoly']+self.params['ppoly']] = self.sample_from_priors(nwalkers,nparam,npa)
+                print(initial_walker_matrix)
                 
                 #initial_walker_matrix[:,:npa+self.params['epoly']+self.params['ppoly']] = np.array(list(theta))[:npa+self.params['epoly']+self.params['ppoly']] + ptb_cv * np.random.randn(nwalkers, npa+self.params['epoly']+self.params['ppoly'])
                 
