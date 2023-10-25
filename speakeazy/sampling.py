@@ -41,7 +41,7 @@ class Sampler(object):
         self.prior = prior
         self.params = prior.params
         self.theta = fit_object.theta
-        self.covar_i = fit_object.theta
+        self.covar_i = fit_object.covar_i
     
     @staticmethod
     def make_norm_prior(mean=0.,sigma=1.,nwalkers=1000,sample=False):

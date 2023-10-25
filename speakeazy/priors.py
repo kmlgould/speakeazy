@@ -29,7 +29,7 @@ class Priors(object):
         self.lr = lr
         self.set_params(fix_ns,nspline,epoly,ppoly,vel_width,vel_width_broad,scale_disp,z,z0,halpha_prism,scale_p,broadlines)    
         
-    def set_params(self,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,scale_disp=1.3,z=None,z0=[0.,6.],halpha_prism='free',scale_p=False,broadlines=False):
+    def set_params(self,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,scale_disp=1.3,z=None,z0=[1.4,1.5],halpha_prism='free',scale_p=False,broadlines=False):
         
         self.params = {}
         self.params['z_in'] = z
