@@ -43,6 +43,7 @@ class Sampler(object):
         self.theta = fit_object.theta
         self.covar_i = fit_object.covar_i
         self.model = fit_object.model
+        self.model.spl_mask = fit_object.spl_mask
     
     @staticmethod
     def make_norm_prior(mean=0.,sigma=1.,nwalkers=1000,sample=False):
