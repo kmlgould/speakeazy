@@ -31,7 +31,7 @@ def test_prior_sampling(self):
 
     # test generation of walkers based on priors - FINISH THIS 
     nwalkers = 100
-    nparam = 
+    nparam = 1
     test_prior_matrix = np.zeros([nwalkers,nparam])
     
     real_prior_matrix = self.sampler.sample_from_priors()
