@@ -87,7 +87,7 @@ class Sampler(object):
         c = np.polyfit(self.data.spec_wobs,y,o)
         
         for i in range(self.params['epoly']):
-            prior_matrix[:,npa+i+1] = self.make_norm_prior(mean=c[i],sigma=0.1*abs(c[i]),nwalkers=nwalkers,sample=True)
+            prior_matrix[:,npa+i] = self.make_norm_prior(mean=c[i],sigma=0.1*abs(c[i]),nwalkers=nwalkers,sample=True)
             
         # doesn't include photometry scaling right now. 
         
