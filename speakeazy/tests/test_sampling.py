@@ -75,4 +75,4 @@ class TestSampler():
          
          print(walker_matrix)
          
-         self.run_emcee()
+         self.sampler.run_emcee()
