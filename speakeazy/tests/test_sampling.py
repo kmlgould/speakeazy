@@ -30,23 +30,21 @@ def test_prior_sampling(self):
     assert np.allclose(norm_prior_sample,norm_prior,tol=1e-3)
 
     # test generation of walkers based on priors - FINISH THIS 
-    nwalkers = 100
-    nparam = 1
-    test_prior_matrix = np.zeros([nwalkers,nparam])
+    #nwalkers = 100
+    #nparam = 1
+    #test_prior_matrix = np.zeros([nwalkers,nparam])
     
-    real_prior_matrix = self.sampler.sample_from_priors()
+    #real_prior_matrix = self.sampler.sample_from_priors()
     
-    assert np.allclose(real_prior_matrix,test_prior_matrix,tol=1e-3)
+    #assert np.allclose(real_prior_matrix,test_prior_matrix,tol=1e-3)
     
-    return test_prior_matrix
+    #return test_prior_matrix
     
     
 
     
-    
-def test_walker_init():
-     """test initialisation of parameter walkers for sampling with Emcee
-    
-    - `speakeazy.sampling.Sampler.init_walkers`
-    """   
-
+#def test_walker_init():
+#     """test initialisation of parameter walkers for sampling with Emcee
+#    
+#    - `speakeazy.sampling.Sampler.init_walkers`
+#    """   
