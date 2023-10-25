@@ -58,7 +58,9 @@ class Sampler(object):
         given priors and parameters, sample from the prior distribution for each parameter
         """
         
-        prior_matrix = np.zeros([nwalkers,nparam])
+        nparam_i = npa+self.params['epoly']+self.params['ppoly']
+        
+        prior_matrix = np.zeros([nwalkers,nparam_i])
         
         if self.data.grating != "prism":
             zscale = 0.0001
