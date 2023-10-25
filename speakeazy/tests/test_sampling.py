@@ -36,6 +36,8 @@ class TestSampler():
         test_std = np.std(norm_prior_test)
         code_std = np.std(norm_prior_code)
         
+        print(test_mean,code_mean,test_std,code_std)
+        
         assert np.allclose(test_mean,code_mean,rtol=1e-1)
         assert np.allclose(test_std,code_std,rtol=1e-1)
 
