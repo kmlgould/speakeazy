@@ -1,11 +1,14 @@
 import numpy as np 
+import os
 
 from .. import data,priors,sampling
 
 
 class TestSampler():
     def setup(self):
-         spectrum = data.Data(spectrum_file='../data/macs0417.1208_340.v0.spec.fits',photometry_file=None,run_ID=1,phot_id=None)
+         _spec_file = os.path.join(os.path.dirname(__file__), 
+                                          'data/macs0417.1208_340.v0.spec.fits')
+         spectrum = data.Data(spectrum_file=_spec_file,photometry_file=None,run_ID=1,phot_id=None)
          prs = priors.Priors(spectrum)
          self.sampler = sampling.Sampler(spectrum,prs)
 
