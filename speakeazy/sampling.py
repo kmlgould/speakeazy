@@ -231,9 +231,9 @@ class Sampler(object):
         
         escale_coeffs = theta[npa:npa+self.params['epoly']]
         pscale_coeffs = theta[npa+self.params['epoly']:npa+self.params['epoly']+self.params['ppoly']]
-        line_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']:npa+self.params['epoly']+self.params['ppoly']+self.params['nlines']] # linecoeffs
-        bline_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']+self.params['nlines']:npa+self.params['epoly']+self.params['ppoly']+self.params['nlines']+self.params['nblines']] # linecoeffs
-        cont_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']+self.params['nlines']+self.params['nblines']:] # the rest are nspline coeffs 
+        line_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']:npa+self.params['epoly']+self.params['ppoly']+self.model.nlines] # linecoeffs
+        bline_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']+self.model.nlines:npa+self.params['epoly']+self.params['ppoly']+self.model.nlines+self.model.bnlines] # linecoeffs
+        cont_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']+self.model.nlines+self.model.bnlines:] # the rest are nspline coeffs 
         
         coeffs = theta[npa+self.params['epoly']+self.params['ppoly']:] #line and spline coeffs. 
 
