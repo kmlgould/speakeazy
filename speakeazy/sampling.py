@@ -67,6 +67,8 @@ class Sampler(object):
 
         else:
             zscale = 0.1
+            
+        self.prior.z_rv = self.make_norm_prior(self.params['zbest'],zscale,sample=False)
         
         prior_matrix[:,0] = self.make_norm_prior(self.params['zbest'],zscale,nwalkers,sample=True)
         prior_matrix[:,1] = self.prior.sc_rv.rvs(size=nwalkers)
@@ -240,7 +242,7 @@ class Sampler(object):
         #print(pscale_coeffs)
         # make model for continuum and lines
 
-        templ_arr,tline = self.generate_templates(z,sc,vw,vw_b,init=False)
+        templ_arr,tline = self.fit_object.model.generate_templates(self.data,z,sc,vw,vw_b,theta,chisq=False)
 
         
 
@@ -263,13 +265,13 @@ class Sampler(object):
             _mcont = mspec - _mline
             _mbline = 0.
             
-        xr = spec_wobs
+        xr = self.data.spec_wobs
         xr_ang = xr*1e4
 
         
-        mask = valid
-        flam = spec_fnu*to_flam
-        eflam = spec_efnu*to_flam
+        mask = self.data.valid
+        flam = self.data.spec_fnu*self.data.to_flam
+        eflam = self.data.spec_efnu*self.data.to_flam
 
         
         
@@ -298,9 +300,9 @@ class Sampler(object):
 
         lnp =  -0.5 * (((flam - mspec) ** 2. / e2) + (np.log(2.*np.pi*e2)))[mask].sum() #removed neg, makes it -ln(P), minimize
         if broadlines:
-            logprior = self.z_rv.logpdf(z) + self.escale_prior(escale) + self.sc_prior(sc) + self.vw_prior(vw) + self.vwb_prior(vw_b) + self.coeffs_prior(coeffs) #+self.balmer_ratios_prior(line_fluxes)
+            logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.vwb_prior(vw_b) + self.prior.coeffs_prior(coeffs) #+self.balmer_ratios_prior(line_fluxes)
         else:
-            logprior = self.z_rv.logpdf(z) + self.escale_prior(escale) + self.sc_prior(sc) + self.vw_prior(vw)
+            logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.coeffs_prior(coeffs)
         lprob = lnp + logprior + lnphot
 
         if np.isnan(lprob):
@@ -310,7 +312,7 @@ class Sampler(object):
 
         return lprob
     
-    def run_emcee(self,n_it=100,wp=3,nds=8,zin=1e-3,mp=False):
+    def run_emcee(self,n_it=100,wp=3,nds=4,zin=1e-3,mp=True):
         
 #         snx = self.theta.values()
         
@@ -321,36 +323,23 @@ class Sampler(object):
 #         # instead sample from covariance draws 
 #         pos = np.array(list(snx))
 
-        pos = self.make_mcmc_draws(wp=wp,init=[zin,0.2,1e-3,1e-2])
+        pos = self.init_walkers(walkers_per_param=wp)
         print(pos)
         nwalkers, ndim = pos.shape
         print(nwalkers,ndim)
         
         # Set up the backend
         # Don't forget to clear it in case the file already exists
-        filename = self.ID+"_emcee_run.h5"
+        filename = self.data.ID+"_emcee_run.h5"
         print(filename)
         backend = emcee.backends.HDFBackend(filename)
         backend.reset(nwalkers, ndim)
 
         
         if mp:
-            
-             # Pool gets stuck with class methods because it uses pickle, which can't pickle instances. 
-             # this is an attempted work around, using dill, which can serialize basically anything. 
-            #import multiprocessing_on_dill as multiprocessing
-            #from multiprocessing_on_dill import Pool
-            #multiprocessing.set_start_method("fork")
-            #os.system("taskset -p 0xff %d" % os.getpid())
             import pathos.multiprocessing as multiproc
             mp_pool = multiproc.ProcessPool(nodes=nds)
-            #sampler = emcee.EnsembleSampler(nwalkers, ndim, sp.log_likelihood, args = (sp,0), pool=pool)
-            #start = time.time()
-            #sampler.run_mcmc(pos, n_it, progress=True)
-            #end = time.time()
-            #multi_time = end - start
-            #print("Multiprocessing took {0:.1f} seconds".format(multi_time))
-           
+         
             with mp_pool as pool:
                 
                 sampler = emcee.EnsembleSampler(nwalkers, ndim, self.log_prob_data_global, pool=pool,backend=backend)
@@ -402,7 +391,7 @@ class Sampler(object):
         else: 
 
             sampler = emcee.EnsembleSampler(
-                    nwalkers, ndim, sp.log_likelihood, args = (sp,0))
+                    nwalkers, ndim, self.log_prob_data_global)
             sampler.run_mcmc(pos, n_it, progress=True);
         
         #flat_samples = sampler.get_chain(discard=0, thin=1, flat=True)

@@ -74,3 +74,5 @@ class TestSampler():
          walker_matrix = self.sampler.init_walkers()
          
          print(walker_matrix)
+         
+         self.run_emcee()
