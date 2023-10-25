@@ -1,6 +1,6 @@
 import nox
 
-@nox.session()
+@nox.session(python="3.9")
 def tests(session):
     session.install(".")
     session.install("pytest")
