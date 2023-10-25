@@ -82,7 +82,7 @@ class Sampler(object):
         
         o = self.params['epoly'] - 1 # defined as ncoeffs instead of order, which is backwards and should be changed. 
         y = np.random.sample(size=len(self.data.spec_wobs))+2. # error scaling should be around 1-3. 
-        c, __ = np.polyfit(self.data.spec_wobs,y,o,full=True)
+        c, stats = np.polyfit(self.data.spec_wobs,y,o,full=True)
         
         for i in range(len(self.param['epoly'])):
             prior_matrix[:,npa+i+1] = self.make_norm_prior(mean=c[i],sigma=0.1*c[i],nwalkers=nwalkers,sample=True)
