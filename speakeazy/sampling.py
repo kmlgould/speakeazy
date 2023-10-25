@@ -22,6 +22,7 @@ import corner
 
 import eazy
 import emcee
+import hickle
 
 import pathos.multiprocessing as mp
 
@@ -411,7 +412,7 @@ class Sampler(object):
         return sampler
     
     def read_samples(self,burnin,thin,flat=True,plot_walkers=True):
-        filename = self.ID+"_emcee_run.h5"
+        filename = self.data.run_ID+"_emcee_run.h5"
         reader = emcee.backends.HDFBackend(filename)
         if plot_walkers:
             self.plot_walkers(reader)
@@ -421,6 +422,7 @@ class Sampler(object):
             samples = reader.get_chain()
         return samples
     
+    # fix this 
     def plot_models(self,flat_samples,nmodels=100):
             params = np.nanmean(flat_samples, axis=0)
             mspec = sp.log_likelihood(params,sp,2)
@@ -430,7 +432,7 @@ class Sampler(object):
 
     def plot_walkers(self,sampler):
         samples = sampler.get_chain()
-        labels = list(sp.theta.keys())
+        labels = list(self.theta.keys())
         for i in range(len(labels)):
             plt.figure(figsize=(10,3))
             plt.plot(samples[:, :, i], "cornflowerblue", alpha=0.1)
@@ -455,6 +457,7 @@ class Sampler(object):
         if save:
             cfig.savefig(f'{self.ID}_corner.png')
 
+    # fix this 
     def plot_err_scale(self,flat_samples,nmodels):
             
         escale_coeffs = np.array([self.theta[f'escale_{i}'] for i in range(self.params['epoly'])])
