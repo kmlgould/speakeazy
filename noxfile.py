@@ -1,6 +1,8 @@
 import nox
 
-@nox.session(python="3.9")
+@nox.session(python="3.9",
+             venv_backend='conda',
+             reuse_venv=True)
 def tests(session):
     session.install(".")
     session.install("pytest")
