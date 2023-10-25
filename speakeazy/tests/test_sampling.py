@@ -31,7 +31,7 @@ class TestSampler():
         
         norm_prior = self.sampler.make_norm_prior(sample=True)
         
-        assert np.allclose(norm_prior_sample,norm_prior,tol=1e-3)
+        assert np.allclose(norm_prior_sample,norm_prior,rtol=1e-3)
 
         # test generation of walkers based on priors - FINISH THIS 
         #nwalkers = 100
