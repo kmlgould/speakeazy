@@ -1,7 +1,7 @@
 import numpy as np 
 import os
 
-from .. import data,priors,sampling
+from .. import data,priors,sampling,fitting
 
 
 class TestSampler():
@@ -11,7 +11,11 @@ class TestSampler():
                                           'macs0417.1208_340.v0.spec.fits')
          spectrum = data.Data(spectrum_file=_spec_file,photometry_file=None,run_ID=1,phot_id=None)
          prs = priors.Priors(spectrum)
-         self.sampler = sampling.Sampler(spectrum,prs)
+         
+         fit_object = fitting.Fitter(spectrum,prs)
+         fit_object.fit_redshift_chisq()
+         self.sampler = sampling.Sampler(spectrum,prs,fit_object)
+         
 
 
     def test_prior_sampling(self):

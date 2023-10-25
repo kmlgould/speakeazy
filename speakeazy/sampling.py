@@ -36,9 +36,12 @@ class Sampler(object):
     Arguments:
         object -- _description_
     """
-    def __init__(self,data,params):
+    def __init__(self,data,prior,fit_object):
         self.data = data
-        self.params = params 
+        self.prior = prior
+        self.params = prior.params
+        self.theta = fit_object.theta
+        self.covar_i = fit_object.theta
     
     @staticmethod
     def make_norm_prior(mean=0.,sigma=1.,nwalkers=1000,sample=False):
@@ -57,12 +60,12 @@ class Sampler(object):
         
         prior_matrix = np.zeros([nwalkers,nparam])
         
-        prior_matrix[:,0] = self.priors.z_rv.rvs(size=nwalkers)
-        prior_matrix[:,1] = self.priors.sc_rv.rvs(size=nwalkers)
-        prior_matrix[:,2] = self.priors.vw_rv.rvs(size=nwalkers)
+        prior_matrix[:,0] = self.prior.z_rv.rvs(size=nwalkers)
+        prior_matrix[:,1] = self.prior.sc_rv.rvs(size=nwalkers)
+        prior_matrix[:,2] = self.prior.vw_rv.rvs(size=nwalkers)
         
         if npa==4:
-            prior_matrix[:,3]= self.priors.vw_b_rv.rvs(size=nwalkers) # but depends on if there are broadlines or not... 
+            prior_matrix[:,3]= self.prior.vw_b_rv.rvs(size=nwalkers) # but depends on if there are broadlines or not... 
 
         else:
             None 
