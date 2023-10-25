@@ -61,8 +61,12 @@ class TestSampler():
         
 
         
-    #def test_walker_init():
-    #     """test initialisation of parameter walkers for sampling with Emcee
-    #    
-    #    - `speakeazy.sampling.Sampler.init_walkers`
-    #    """   
+    def test_walker_init(self):
+         """test initialisation of parameter walkers for sampling with Emcee
+        
+        - `speakeazy.sampling.Sampler.init_walkers`
+        """   
+        
+         walker_matrix = self.sampler.init_walkers()
+         
+         print(walker_matrix)

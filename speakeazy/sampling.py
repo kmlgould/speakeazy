@@ -78,9 +78,6 @@ class Sampler(object):
         for i in range(len(self.param['epoly'])):
             prior_matrix[:,npa+i+1] = self.make_norm_prior(c[i],sigma=0.1*c[i],nwalkers=nwalkers,sample=True)
             
-        if prior_matrix.size==(nwalkers,nparam):
-            print('it worked')
-            
         # doesn't include photometry scaling right now. 
         
         
