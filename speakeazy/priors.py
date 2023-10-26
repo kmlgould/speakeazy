@@ -59,7 +59,7 @@ class Priors(object):
             sc_scale = 0.01
         else:
             zscale = 0.1
-            sc_scale = 0.5
+            sc_scale = 0.1
 
 
        # if self.params['broadlines']:

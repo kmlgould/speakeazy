@@ -74,8 +74,8 @@ class Sampler(object):
         self.prior.z_rv = self.make_norm_prior(self.params['zbest'],zscale,sample=False)
         
         prior_matrix[:,0] = self.make_norm_prior(self.params['zbest'],zscale,nwalkers,sample=True)
-        prior_matrix[:,2] = self.prior.vw_rv.rvs(size=nwalkers)
-        prior_matrix[:,1] = self.prior.sc_rv.rvs(size=nwalkers)
+        prior_matrix[:,1] = self.prior.vw_rv.rvs(size=nwalkers)
+        prior_matrix[:,2] = self.prior.sc_rv.rvs(size=nwalkers)
         
         if npa==4:
             prior_matrix[:,3]= self.prior.vw_b_rv.rvs(size=nwalkers) # but depends on if there are broadlines or not... 
@@ -478,7 +478,7 @@ class Sampler(object):
             mspec = self.generate_model(params)
             self.model_spec = mspec
             inds = np.random.randint(len(flat_samples), size=nmodels)
-            self.simple_plot_spectrum(save=True,fname=str(self.run_ID)+"_emcee_fullfit.png",flat_samples=flat_samples[inds])
+            self.simple_plot_spectrum(save=True,fname=str(self.data.run_ID)+"_emcee_fullfit.png",flat_samples=flat_samples[inds])
 
     def plot_walkers(self,sampler):
         samples = sampler.get_chain()
