@@ -130,7 +130,7 @@ class Plotting(object):
         plt.xlabel(r'Wavelength [$\mu$m]')
         plt.ylabel(r'F$_{\lambda}$ [10$^{-19}$ erg/s/cm$^{2}/\AA$]')
         zb = self.theta['z']
-        plt.title(f'{self.fname}, zspec={zb:.3f}',fontsize=10)
+        plt.title(f'{self.data.run_ID}, zspec={zb:.3f}',fontsize=10)
         #plt.text(x=0.6,y=0.8,s=f'{self.fname}\n z={zb:.3f}',
          #                        bbox = dict(facecolor = 'white', alpha = 0.5),fontsize=10,
           #       transform=ax.transAxes)
