@@ -564,9 +564,9 @@ class Sampler(object):
 
         scale=1.
         
-        if (self.priors.params['scale_p']==True):
+        if (self.prior.params['scale_p']==True):
             if (self.theta['pscale_0']!=1.) : 
-                pscale_coeffs = np.array([self.theta[f'pscale_{i}'] for i in range(self.priors.params['ppoly'])])
+                pscale_coeffs = np.array([self.theta[f'pscale_{i}'] for i in range(self.prior.params['ppoly'])])
                 scale = (np.polyval(pscale_coeffs,wav))
             #else:
             #    scale = 1.
