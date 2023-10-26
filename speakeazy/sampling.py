@@ -365,7 +365,7 @@ class Sampler(object):
 
         return lprob
     
-    def run_emcee(self,n_it=100,wp=3,nds=4,zin=1e-3,mp=True):
+    def run_emcee(self,n_it=10,wp=3,nds=4,zin=1e-3,mp=True):
         
 #         snx = self.theta.values()
         
