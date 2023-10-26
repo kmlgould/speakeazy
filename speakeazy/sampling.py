@@ -549,7 +549,7 @@ class Sampler(object):
 
         return products
 
-    def simple_plot_spectrum(self,save=True,fname=None,flat_samples=None,line_snr=5.,show_lines=False,ylims=None,xlims=None):
+    def simple_plot_spectrum(self,save=True,fname=None,flat_samples=None,lines=False,ylims=None,xlims=None):
         
         mask = self.data.valid
         flam = self.data.spec_fnu*self.data.to_flam
@@ -587,14 +587,17 @@ class Sampler(object):
         if flat_samples is not None:
             for sample in flat_samples:
                 mspec,mline = self.generate_model(sample)
-                plt.plot(wav,mspec,color='cornflowerblue',lw=0.5,alpha=0.3)
+                if lines:
+                    plt.plot(wav,mline,color='cornflowerblue',lw=0.5,alpha=0.3)
+                else:
+                     plt.plot(wav,mspec,color='cornflowerblue',lw=0.5,alpha=0.3)                   
         plt.xlabel(r'Wavelength [$\mu$m]')
         plt.ylabel(r'F$_{\lambda}$ [10$^{-19}$ erg/s/cm$^{2}/\AA$]')
         zb = self.theta['z']
         #plt.title(f'{self.data.fname}, zspec={zb:.3f}',fontsize=10)
-        #plt.text(x=0.6,y=0.8,s=f'{self.data.fname}\n z={zb:.3f}',
-        #                         bbox = dict(facecolor = 'white', alpha = 0.5),fontsize=10,
-        #         transform=ax.transAxes)
+        plt.text(x=0.6,y=0.8,s=f'{self.data.run_ID}\n z={zb:.3f}',
+                                 bbox = dict(facecolor = 'white', alpha = 0.5),fontsize=10,
+                 transform=ax.transAxes)
         #plt.grid(alpha=0.6)
         if ylims is not None:
             plt.ylim(ylims[0],ylims[1])
