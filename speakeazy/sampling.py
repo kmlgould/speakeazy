@@ -23,6 +23,7 @@ import corner
 import eazy
 import emcee
 import hickle
+import re
 
 import pathos.multiprocessing as mp
 
@@ -265,7 +266,7 @@ class Sampler(object):
             _mcont = mspec - _mline
             _mbline = 0.
             
-        return mspec
+        return mspec,_mline
         
         
     def log_prob_data_global(self,theta):
@@ -475,8 +476,9 @@ class Sampler(object):
     # fix this 
     def plot_models(self,flat_samples,nmodels=10):
             params = np.nanmean(flat_samples, axis=0)
-            mspec = self.generate_model(params)
+            mspec,mline = self.generate_model(params)
             self.model_spec = mspec
+            self.model_line = mline
             inds = np.random.randint(len(flat_samples), size=nmodels)
             self.simple_plot_spectrum(save=True,fname=str(self.data.run_ID)+"_emcee_fullfit.png",flat_samples=flat_samples[inds])
 
@@ -511,7 +513,7 @@ class Sampler(object):
     def plot_err_scale(self,flat_samples,nmodels):
             
         escale_coeffs = np.array([self.theta[f'escale_{i}'] for i in range(self.params['epoly'])])
-        escale = (np.polyval(escale_coeffs,spec_wobs))
+        escale = (np.polyval(escale_coeffs,self.data.spec_wobs))
         labels = list(self.theta.keys())
 
     
@@ -519,14 +521,14 @@ class Sampler(object):
         indexes = [index for index in range(len(labels)) if labels[index] in labs]
         inds = np.random.randint(len(flat_samples), size=nmodels)
         plt.figure(figsize=(12,4))
-        plt.plot(spec_wobs,escale,lw=2,color='red')
+        plt.plot(self.data.spec_wobs,escale,lw=2,color='red')
         plt.xlabel(r'Wavelength [$\mu$m]')
         plt.ylabel('Error scaling')
         for sample in flat_samples[inds]:
     
             e_coeff = sample[indexes]
-            escale_i = (np.polyval(e_coeff,spec_wobs))
-            plt.plot(spec_wobs,escale_i,lw=1,alpha=0.1,color='red')
+            escale_i = (np.polyval(e_coeff,self.data.spec_wobs))
+            plt.plot(self.data.spec_wobs,escale_i,lw=1,alpha=0.1,color='red')
     
             plt.xlabel(r'Wavelength [$\mu$m]')
             plt.ylabel('Error scaling')
@@ -536,6 +538,7 @@ class Sampler(object):
         flat_samples = sampler.get_chain(discard=burnin, thin=thin, flat=True)
         products = OrderedDict()
         labels = list(self.theta.keys())
+        ndim = len(labels)
 
         for i,l in zip(range(ndim),labels):
             mcmc = np.percentile(flat_samples[:, i], [16, 50, 84])
@@ -611,10 +614,10 @@ class Sampler(object):
                     if l_snr>line_snr:
                         #lname = line.strip(' line') # get name of line
                         lname = re.sub(r'line ', '', line)
-                        if len(Priors.lw[lname])>0:
-                            wavl = np.average(Priors.lw[lname])
+                        if len(self.prior.lw[lname])>0:
+                            wavl = np.average(self.prior.lw[lname])
                         else:
-                            wavl = Priors.lw[lname]
+                            wavl = self.prior.lw[lname]
                         line_center = (wavl*(1.+self.theta['z']))/1e4
                         if (xlims[0]<line_center<xlims[1]):
                             plt.axvline(line_center,ls='dashed',color='blue',alpha=0.5)
@@ -639,7 +642,7 @@ class Sampler(object):
             
         if flat_samples is not None:
             for sample in flat_samples:
-                mspec = self.generate_model(sample)
+                mspec,mline = self.generate_model(sample)
                 plt.plot(wav,mspec,color='cornflowerblue',lw=0.5,alpha=0.3)
         plt.xlabel(r'Wavelength [$\mu$m]')
         plt.ylabel(r'F$_{\lambda}$ [10$^{-19}$ erg/s/cm$^{2}/\AA$]')
