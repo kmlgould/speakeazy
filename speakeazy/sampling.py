@@ -583,63 +583,7 @@ class Sampler(object):
         ymax = 1.1*np.nanmax((flam*scale)[mask])
         ymin = np.nanmin((flam*scale)[mask])
         #print(ymin,ymax)
-
-        if hasattr(self, 'model_spec'):
-            #if (self.params['scale_p']==True):
-            #    if (self.theta['pscale_0']!=1.):
-                    # scaling has already been applied 
-          #          plt.step(wav[mask],(self.model_spec)[mask],color='blue',label='Model')
-        #else:
-            plt.step(wav[mask],(self.model_spec*scale)[mask],color='black',label='Model')
-
-            
-            plt.step(wav[mask],(self.model_line*scale)[mask],color='blue',label='Lines')
-            #plt.step(wav[mask],(self.model_bline*scale)[mask],color='red',label='Broad lines')
-            #plt.step(wav[mask],self.model_cont[mask],color='olive',label='Continuum')
-
-            if hasattr(scale, "__len__"):
-                plt.plot(self.data.spec_wobs[mask], (((self.Acont.T).T))*scale[mask,None],
-                        color='olive', alpha=0.3)
-            else:
-                plt.plot(self.data.spec_wobs[mask], (((self.Acont.T).T))*scale,
-                        color='olive', alpha=0.3)
-            # plot emission lines 
-
-            if show_lines:
-
-                
-                
-                for line in self.line_table:
-                    l_snr = abs(self.line_table[line][0])/abs(self.line_table[line][1])
-                    if l_snr>line_snr:
-                        #lname = line.strip(' line') # get name of line
-                        lname = re.sub(r'line ', '', line)
-                        if len(self.prior.lw[lname])>0:
-                            wavl = np.average(self.prior.lw[lname])
-                        else:
-                            wavl = self.prior.lw[lname]
-                        line_center = (wavl*(1.+self.theta['z']))/1e4
-                        if (xlims[0]<line_center<xlims[1]):
-                            plt.axvline(line_center,ls='dashed',color='blue',alpha=0.5)
-                            plt.text(x=line_center,y=ymax*0.5,s=lname,rotation=90,fontsize=9,color='blue',alpha=0.5)
-                        else:
-                            continue
-                """
-                for bline in self.bline_table:
-                    l_snr = abs(self.bline_table[bline][0])/abs(self.bline_table[bline][1])
-                    if l_snr>line_snr:
-                        lname = re.sub(r'broad line ', '', bline) 
-                        line_center = (self.lw[lname][0]*(1.+self.theta['z']))/1e4
-                        if (xlims[0]<line_center<xlims[1]):                        
-                            plt.axvline(line_center,ls='dashed',color='red',alpha=0.5)
-                            plt.text(x=line_center,y=ymax*0.5,s=lname,rotation=90,fontsize=9,color='red',alpha=0.5)
-                        else:
-                            continue
-                """
-
-
-
-            
+          
         if flat_samples is not None:
             for sample in flat_samples:
                 mspec,mline = self.generate_model(sample)
