@@ -69,13 +69,13 @@ class Sampler(object):
             zscale = 0.0001
 
         else:
-            zscale = 0.1
+            zscale = 0.01
             
         self.prior.z_rv = self.make_norm_prior(self.params['zbest'],zscale,sample=False)
         
         prior_matrix[:,0] = self.make_norm_prior(self.params['zbest'],zscale,nwalkers,sample=True)
-        prior_matrix[:,1] = self.prior.sc_rv.rvs(size=nwalkers)
         prior_matrix[:,2] = self.prior.vw_rv.rvs(size=nwalkers)
+        prior_matrix[:,1] = self.prior.sc_rv.rvs(size=nwalkers)
         
         if npa==4:
             prior_matrix[:,3]= self.prior.vw_b_rv.rvs(size=nwalkers) # but depends on if there are broadlines or not... 
@@ -215,6 +215,59 @@ class Sampler(object):
         return fpos
 
 
+
+    def generate_model(self,theta):
+        # initialise parameters
+
+        broadlines = self.params['broadlines']
+
+        if broadlines:
+        
+            npa = 4
+            z, vw, vw_b, sc = theta[:npa]
+        else:
+            npa = 3
+            z, vw, sc = theta[:npa]
+            vw_b = 0.
+
+
+        
+        escale_coeffs = theta[npa:npa+self.params['epoly']]
+        pscale_coeffs = theta[npa+self.params['epoly']:npa+self.params['epoly']+self.params['ppoly']]
+        line_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']:npa+self.params['epoly']+self.params['ppoly']+self.model.nlines] # linecoeffs
+        bline_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']+self.model.nlines:npa+self.params['epoly']+self.params['ppoly']+self.model.nlines+self.model.nblines] # linecoeffs
+        cont_coeffs = theta[npa+self.params['epoly']+self.params['ppoly']+self.model.nlines+self.model.nblines:] # the rest are nspline coeffs 
+        
+        coeffs = theta[npa+self.params['epoly']+self.params['ppoly']:] #line and spline coeffs. 
+
+        # make model for continuum and lines
+
+        templ_arr,tline = self.model.generate_templates(self.data,z,sc,vw,vw_b,self.theta,chisq=False)
+
+        
+
+        nline_mask = tline==0
+
+        if broadlines:
+            nbline_mask = tline==1
+        
+
+        mspec = templ_arr.T.dot(coeffs)
+        #_mline = _A.T.dot(coeffs*tline) #+ _A.T.dot(coeffs*tbline) #broad
+        _mline = templ_arr.T.dot(coeffs*nline_mask)
+
+        if broadlines:
+            _mbline = templ_arr.T.dot(coeffs*nbline_mask)
+                          
+            _mcont = mspec - _mline - _mbline
+
+        else:
+            _mcont = mspec - _mline
+            _mbline = 0.
+            
+        return mspec
+        
+        
     def log_prob_data_global(self,theta):
 
         # initialise parameters
@@ -240,9 +293,6 @@ class Sampler(object):
         
         coeffs = theta[npa+self.params['epoly']+self.params['ppoly']:] #line and spline coeffs. 
 
-        #print(len(coeffs))
-      
-        #print(pscale_coeffs)
         # make model for continuum and lines
 
         templ_arr,tline = self.model.generate_templates(self.data,z,sc,vw,vw_b,self.theta,chisq=False)
@@ -423,12 +473,12 @@ class Sampler(object):
         return samples
     
     # fix this 
-    def plot_models(self,flat_samples,nmodels=100):
+    def plot_models(self,flat_samples,nmodels=10):
             params = np.nanmean(flat_samples, axis=0)
-            mspec = sp.log_likelihood(params,sp,2)
+            mspec = self.generate_model(params)
             self.model_spec = mspec
             inds = np.random.randint(len(flat_samples), size=nmodels)
-            self.plot_spectrum(save=True,fname=self.ID+"_emcee_fullfit.png",flat_samples=flat_samples[inds])
+            self.simple_plot_spectrum(save=True,fname=str(self.run_ID)+"_emcee_fullfit.png",flat_samples=flat_samples[inds])
 
     def plot_walkers(self,sampler):
         samples = sampler.get_chain()
@@ -496,3 +546,119 @@ class Sampler(object):
 
         return products
 
+    def simple_plot_spectrum(self,save=True,fname=None,flat_samples=None,line_snr=5.,show_lines=False,ylims=None,xlims=None):
+        
+        mask = self.data.valid
+        flam = self.data.spec_fnu*self.data.to_flam
+        eflam = self.data.spec_efnu*self.data.to_flam
+        
+        flam[~mask] = np.nan
+        eflam[~mask] = np.nan
+        
+        wav = self.data.spec_wobs
+        
+        xmin = np.nanmin(wav[mask])
+        xmax = np.nanmax(wav[mask])
+
+        fig, ax = plt.subplots(ncols=1,nrows=1,figsize=(12,4))
+
+        scale=1.
+        
+        if (self.priors.params['scale_p']==True):
+            if (self.theta['pscale_0']!=1.) : 
+                pscale_coeffs = np.array([self.theta[f'pscale_{i}'] for i in range(self.priors.params['ppoly'])])
+                scale = (np.polyval(pscale_coeffs,wav))
+            #else:
+            #    scale = 1.
+
+        #if scale==None:
+        #    scale=1.
+
+        scale = 1.     
+        # plot data     
+        plt.step(wav[mask],(flam*scale)[mask],color='grey',alpha=0.5,label='1D spectrum')
+        ymax = 1.1*np.nanmax((flam*scale)[mask])
+        ymin = np.nanmin((flam*scale)[mask])
+        #print(ymin,ymax)
+
+        if hasattr(self, 'model_spec'):
+            #if (self.params['scale_p']==True):
+            #    if (self.theta['pscale_0']!=1.):
+                    # scaling has already been applied 
+          #          plt.step(wav[mask],(self.model_spec)[mask],color='blue',label='Model')
+        #else:
+            plt.step(wav[mask],(self.model_spec*scale)[mask],color='black',label='Model')
+
+            
+            plt.step(wav[mask],(self.model_line*scale)[mask],color='blue',label='Lines')
+            #plt.step(wav[mask],(self.model_bline*scale)[mask],color='red',label='Broad lines')
+            #plt.step(wav[mask],self.model_cont[mask],color='olive',label='Continuum')
+
+            if hasattr(scale, "__len__"):
+                plt.plot(self.data.spec_wobs[mask], (((self.Acont.T).T))*scale[mask,None],
+                        color='olive', alpha=0.3)
+            else:
+                plt.plot(self.data.spec_wobs[mask], (((self.Acont.T).T))*scale,
+                        color='olive', alpha=0.3)
+            # plot emission lines 
+
+            if show_lines:
+
+                
+                
+                for line in self.line_table:
+                    l_snr = abs(self.line_table[line][0])/abs(self.line_table[line][1])
+                    if l_snr>line_snr:
+                        #lname = line.strip(' line') # get name of line
+                        lname = re.sub(r'line ', '', line)
+                        if len(Priors.lw[lname])>0:
+                            wavl = np.average(Priors.lw[lname])
+                        else:
+                            wavl = Priors.lw[lname]
+                        line_center = (wavl*(1.+self.theta['z']))/1e4
+                        if (xlims[0]<line_center<xlims[1]):
+                            plt.axvline(line_center,ls='dashed',color='blue',alpha=0.5)
+                            plt.text(x=line_center,y=ymax*0.5,s=lname,rotation=90,fontsize=9,color='blue',alpha=0.5)
+                        else:
+                            continue
+                """
+                for bline in self.bline_table:
+                    l_snr = abs(self.bline_table[bline][0])/abs(self.bline_table[bline][1])
+                    if l_snr>line_snr:
+                        lname = re.sub(r'broad line ', '', bline) 
+                        line_center = (self.lw[lname][0]*(1.+self.theta['z']))/1e4
+                        if (xlims[0]<line_center<xlims[1]):                        
+                            plt.axvline(line_center,ls='dashed',color='red',alpha=0.5)
+                            plt.text(x=line_center,y=ymax*0.5,s=lname,rotation=90,fontsize=9,color='red',alpha=0.5)
+                        else:
+                            continue
+                """
+
+
+
+            
+        if flat_samples is not None:
+            for sample in flat_samples:
+                mspec = self.generate_model(sample)
+                plt.plot(wav,mspec,color='cornflowerblue',lw=0.5,alpha=0.3)
+        plt.xlabel(r'Wavelength [$\mu$m]')
+        plt.ylabel(r'F$_{\lambda}$ [10$^{-19}$ erg/s/cm$^{2}/\AA$]')
+        zb = self.theta['z']
+        #plt.title(f'{self.data.fname}, zspec={zb:.3f}',fontsize=10)
+        #plt.text(x=0.6,y=0.8,s=f'{self.data.fname}\n z={zb:.3f}',
+        #                         bbox = dict(facecolor = 'white', alpha = 0.5),fontsize=10,
+        #         transform=ax.transAxes)
+        #plt.grid(alpha=0.6)
+        if ylims is not None:
+            plt.ylim(ylims[0],ylims[1])
+        else:
+            plt.ylim(-0.05,ymax)
+            
+        if xlims is not None:
+            #print(xlims[0],xlims[1])
+            plt.xlim(xlims[0],xlims[1])
+        else:
+            plt.xlim(xmin+0.05,xmax-0.03)
+        if save:
+            plt.savefig(fname)
+        return #fig
