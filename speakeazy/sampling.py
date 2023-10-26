@@ -545,7 +545,7 @@ class Sampler(object):
             q = np.diff(mcmc)
             
             products[l] = [mcmc[1], q[0], q[1]] # write results 
-        hickle.dump(products,self.ID+'_emcee_products.dict') 
+        hickle.dump(products,str(self.data.run_ID)+'_emcee_products.dict') 
 
         return products
 
