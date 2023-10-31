@@ -194,6 +194,27 @@ class Fitter(object):
         
             return zgrid, chi2
         
+        
+    def check_lines(self,line_names):
+        """check_lines create boolean mask for fixed lines
+
+        Arguments:
+            line_names -- array [str] of lines
+            
+        Returns: boolean array where True = line is in fixed_lines from priors
+        """
+        
+        line_name_mask = []
+        
+        for line in line_names:
+            if line in self.priors.fixed_lines:
+                line_name_mask.append(True)
+            else:
+                line_name_mask.append(False)
+                
+        return line_name_mask
+    
+    
     def fit_redshift_chisq(self,zstep=[0.002,0.0001]):
         """fit_redshift_chisq _summary_
 
@@ -331,15 +352,16 @@ class Fitter(object):
         
         bspl_names = [f'bspl_{x}' for x in range(len(cont_coeffs))]
         
-         # remove line coeffs that are zero 
-        
-        line_mask = line_coeffs!=0. 
+         # remove line coeffs that are zero - except if its in the fixed list, e.g. don't remove Ha or NII ! 
+        line_names_mask = self.check_lines(line_names_)
+        line_mask = (line_coeffs!=0.)  | (line_names_mask)
         self.model.nlines=np.sum(line_mask)
 
 
         if self.priors.params['broadlines']:
-            bline_mask = bline_coeffs!=0. 
-            self.model.nblines=np.sum(line_mask)
+            broad_line_names_mask = self.check_lines(broad_line_names_)
+            bline_mask = (bline_coeffs!=0.) | (broad_line_names_mask)
+            self.model.nblines=np.sum(bline_mask)
 
 
         spl_mask = cont_coeffs!=0. 

@@ -36,7 +36,7 @@ class Priors(object):
                                             'escale_sigma':0.1,
                                             'scale_disp_prior':'norm',
                                             'scale_disp_mu':1.3,
-                                            'scale_disp_sigma':0.1}):
+                                            'scale_disp_sigma':0.1},input_fixed_lines=[]):
         lw, lr = utils.get_line_wavelengths()
         self.data = data 
         self.lw = lw
@@ -44,6 +44,19 @@ class Priors(object):
         self.set_params(fix_ns,nspline,epoly,ppoly,vel_width,vel_width_broad,scale_disp,z,z0,halpha_prism,scale_p,broadlines)    
         self.set_priors(prior_instructions)
         self.set_hlines_prior()
+        self.set_fixed_lines(input_fixed_lines)
+        
+    def set_fixed_lines(self,input_fixed_lines=[]):
+        
+        
+        if self.data.grating == 'prism':
+            default_lines = ['Ha','NII','OIII','Hb']
+        else:
+            default_lines = ['Ha','NII-6549', 'NII-6584','OIII-4959','OIII-5007','Hb']
+           
+        fixed_lines = np.concatenate(default_lines,input_fixed_lines)
+        
+        self.fixed_lines = fixed_lines
         
     def set_params(self,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,scale_disp=1.3,z=None,z0=[1.4,1.5],halpha_prism='free',scale_p=False,broadlines=False):
         

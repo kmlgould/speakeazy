@@ -12,9 +12,23 @@ class TestSampler():
          spectrum = data.Data(spectrum_file=_spec_file,photometry_file=None,run_ID=1,phot_id=None)
          prs = priors.Priors(spectrum)
          
-         fit_object = fitting.Fitter(spectrum,prs)
-         fit_object.fit_redshift_chisq()
-         self.sampler = sampling.Sampler(spectrum,prs,fit_object)
+         self.fit_object = fitting.Fitter(spectrum,prs)
+         self.fit_object.fit_redshift_chisq()
+         
+         self.sampler = sampling.Sampler(spectrum,prs,self.fit_object)
+         
+         
+    def test_fixed_lines(self):
+        
+        test_lines = ['Ha','NII','OIII','Hb']
+        test_sum = len(test_lines)
+        
+        line_mask = self.fit_object.check_lines(test_lines)
+        
+        line_sum = np.sum(line_mask)
+        
+        assert line_sum == test_sum
+        
          
 
 
@@ -76,3 +90,4 @@ class TestSampler():
          print(walker_matrix)
          
          self.sampler.run_emcee()
+
