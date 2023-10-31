@@ -152,7 +152,7 @@ class Fitter(object):
             # print(covar_i.shape)
             #cv_mask = cv_mask.append(#bug??? wron way round???
             #covar_i_masked = covar_i[cv_mask,cv_mask]
-            self.covar_i =  np.squeeze(covar_i)
+            #self.covar_i =  np.squeeze(covar_i)
                 
 
            # except:
@@ -162,7 +162,7 @@ class Fitter(object):
                 
 
             
-            return _A, coeffs, covard, line_names_, broad_line_names_, tline
+            return _A, coeffs, covard, covar_i, line_names_, broad_line_names_, tline
         
         else:
             
@@ -246,7 +246,7 @@ class Fitter(object):
             zbest = self.priors.params['z_in']
             zgrid = 1
             zstep = 1
-            _A, coeffs, covard, line_names_,broad_line_names_,tline = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=self.priors.params['z_in'])
+            _A, coeffs, covard, covar_i, line_names_,broad_line_names_,tline = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=self.priors.params['z_in'])
 
         else: 
         
@@ -276,7 +276,7 @@ class Fitter(object):
             
             self.priors.params['zbest']=zbest
         
-            _A, coeffs, covard, line_names_, broad_line_names_,tline = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=zbest)
+            _A, coeffs, covard, covar_i, line_names_, broad_line_names_,tline = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=zbest)
         
         self.templates = _A
         #self.tline = tline
@@ -362,12 +362,17 @@ class Fitter(object):
             broad_line_names_mask = self.check_lines(broad_line_names_)
             bline_mask = (bline_coeffs!=0.) | (broad_line_names_mask)
             self.model.nblines=np.sum(bline_mask)
+            
 
 
         spl_mask = cont_coeffs!=0. 
         self.priors.params['nspline']=np.sum(spl_mask)
         self.model.nspline=np.sum(spl_mask)
         self.spl_mask = spl_mask
+        
+        cv_mask = [*line_mask,*bline_mask,*spl_mask]
+        covar_i_masked = covar_i[cv_mask,cv_mask]
+        self.covar_i =  np.squeeze(covar_i_masked)
 
         for name,coeff in zip(np.array(line_names_)[line_mask].tolist(),line_coeffs[line_mask]):
             theta_dict['line '+name]=coeff
