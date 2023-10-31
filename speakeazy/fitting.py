@@ -135,7 +135,8 @@ class Fitter(object):
 
             print(np.sum(oktemp),'oktemp')
 
-            AxT = (_A[oktemp,:]/eflam)[:,mask].T
+            #AxT = (_A[oktemp,:]/eflam)[:,mask].T
+            AxT = (_A[:,:]/eflam)[:,mask].T
 
             covar_i = utils.safe_invert(np.dot(AxT.T, AxT))
             covar = utils.fill_masked_covar(covar_i, oktemp)
