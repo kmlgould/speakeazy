@@ -370,7 +370,10 @@ class Fitter(object):
         self.model.nspline=np.sum(spl_mask)
         self.spl_mask = spl_mask
         
-        cv_mask = [*line_mask,*bline_mask,*spl_mask]
+        if self.priors.params['broadlines']:
+            cv_mask = [*line_mask,*bline_mask,*spl_mask]
+        else:
+            cv_mask = [*line_mask,*spl_mask]
         covar_i_masked = covar_i[cv_mask,cv_mask]
         self.covar_i =  np.squeeze(covar_i_masked)
 
