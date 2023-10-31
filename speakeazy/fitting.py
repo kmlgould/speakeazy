@@ -371,7 +371,7 @@ class Fitter(object):
         self.model.nspline=np.sum(spl_mask)
         self.spl_mask = spl_mask
         
-        print("line mask", np.sum(line_mask),"spl mask",np.sum(spl_mask))
+        print("line mask", len(line_mask),"spl mask",len(spl_mask))
         
         if self.priors.params['broadlines']:
             cv_mask = [*line_mask,*bline_mask,*spl_mask]
