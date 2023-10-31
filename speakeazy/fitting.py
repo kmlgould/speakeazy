@@ -135,8 +135,8 @@ class Fitter(object):
 
             print(np.sum(oktemp),'oktemp')
 
-            #AxT = (_A[oktemp,:]/eflam)[:,mask].T
-            AxT = (_A[:,:]/eflam)[:,mask].T
+            AxT = (_A[oktemp,:]/eflam)[:,mask].T
+            #AxT = (_A[:,:]/eflam)[:,mask].T
 
             covar_i = utils.safe_invert(np.dot(AxT.T, AxT))
             covar = utils.fill_masked_covar(covar_i, oktemp)
@@ -370,6 +370,8 @@ class Fitter(object):
         self.priors.params['nspline']=np.sum(spl_mask)
         self.model.nspline=np.sum(spl_mask)
         self.spl_mask = spl_mask
+        
+        print("line mask", np.sum(line_mask),"spl mask",np.sum(spl_mask))
         
         if self.priors.params['broadlines']:
             cv_mask = [*line_mask,*bline_mask,*spl_mask]
