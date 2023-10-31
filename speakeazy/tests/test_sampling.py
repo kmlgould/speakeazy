@@ -11,12 +11,19 @@ class TestSampler():
                                           'macs0417.1208_340.v0.spec.fits')
          spectrum = data.Data(spectrum_file=_spec_file,photometry_file=None,run_ID=1,phot_id=None)
          prs = priors.Priors(spectrum)
+         self.priors = prs
          
          self.fit_object = fitting.Fitter(spectrum,prs)
          self.fit_object.fit_redshift_chisq()
          
          self.sampler = sampling.Sampler(spectrum,prs,self.fit_object)
          
+         
+    def test_input_fixed_lines(self):
+        
+        self.priors.set_fixed_lines()
+        
+        self.priors.set_fixed_lines(input_fixed_lines=['Pa9'])
          
     def test_fixed_lines(self):
         

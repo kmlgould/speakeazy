@@ -54,9 +54,10 @@ class Priors(object):
         else:
             default_lines = ['Ha','NII-6549', 'NII-6584','OIII-4959','OIII-5007','Hb']
            
-        fixed_lines = np.concatenate(default_lines,input_fixed_lines)
-        
-        self.fixed_lines = fixed_lines
+        if input_fixed_lines:
+            fixed_lines = default_lines.append(input_fixed_lines)
+        else:
+            self.fixed_lines = default_lines
         
     def set_params(self,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,scale_disp=1.3,z=None,z0=[1.4,1.5],halpha_prism='free',scale_p=False,broadlines=False):
         
