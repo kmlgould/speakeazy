@@ -344,6 +344,7 @@ class Fitter(object):
 
         spl_mask = cont_coeffs!=0. 
         self.priors.params['nspline']=np.sum(spl_mask)
+        self.model.nspline=np.sum(spl_mask)
         self.spl_mask = spl_mask
 
         for name,coeff in zip(np.array(line_names_)[line_mask].tolist(),line_coeffs[line_mask]):

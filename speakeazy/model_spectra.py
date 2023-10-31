@@ -166,7 +166,7 @@ class Model(object):
         
             # broad
             if broadlines:
-                broad_line_names_pre = [l for l in self.theta.keys() if l.startswith("broad line ")]
+                broad_line_names_pre = [l for l in theta.keys() if l.startswith("broad line ")]
                 broad_line_names = [re.sub(r'broad line ', '', l,1) for l in broad_line_names_pre]
    
 
