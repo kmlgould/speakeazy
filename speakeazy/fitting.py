@@ -131,7 +131,7 @@ class Fitter(object):
             coeffs[okt] = _x[0]
             
            # try:
-            oktemp = okt & (coeffs != 0)
+            oktemp = okt #& (coeffs != 0)
 
             print(np.sum(oktemp),'oktemp')
 
