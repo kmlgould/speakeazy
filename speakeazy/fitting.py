@@ -131,6 +131,7 @@ class Fitter(object):
             res = lsq_linear(_Ax[:,mask].T, 
                                      _yx[mask],
                                      bounds=masked_fit_bounds, method='bvls',verbose=True)
+            _x = res.x
             #_x = nnls(_Ax[:,mask].T, 
             #                     _yx[mask])
 
@@ -191,7 +192,7 @@ class Fitter(object):
                 res = lsq_linear(_Ax[:,mask].T, 
                                      _yx[mask],
                                      bounds=masked_fit_bounds, method='bvls',verbose=True)
-                _x = res[0]
+                _x = res.x
                 #_x = nnls(_Ax[:,mask].T, 
                 #                 _yx[mask])
 
