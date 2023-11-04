@@ -126,10 +126,10 @@ class Fitter(object):
             #                         _yx[mask], rcond=None)
             
             fit_bounds = self.model.fit_bounds
+            masked_fit_bounds = (fit_bounds[0][:][okt] ,fit_bounds[1][:][okt])
             res = lsq_linear(_Ax[:,mask].T, 
                                      _yx[mask],
-                                     bounds=fit_bounds, method='bvls',verbose=True)
-            _x = res[0]
+                                     bounds=masked_fit_bounds, method='bvls',verbose=True)
             #_x = nnls(_Ax[:,mask].T, 
             #                     _yx[mask])
 
@@ -186,11 +186,10 @@ class Fitter(object):
                 #_x = np.linalg.lstsq(_Ax[:,mask].T, 
                 #                         _yx[mask], rcond=None)
                 fit_bounds = self.model.fit_bounds
-                fit_bounds[0] = fit_bounds[0][:][okt] 
-                fit_bounds[1] = fit_bounds[1][:][okt]
+                masked_fit_bounds = (fit_bounds[0][:][okt] ,fit_bounds[1][:][okt])
                 res = lsq_linear(_Ax[:,mask].T, 
                                      _yx[mask],
-                                     bounds=fit_bounds, method='bvls',verbose=True)
+                                     bounds=masked_fit_bounds, method='bvls',verbose=True)
                 _x = res[0]
                 #_x = nnls(_Ax[:,mask].T, 
                 #                 _yx[mask])
