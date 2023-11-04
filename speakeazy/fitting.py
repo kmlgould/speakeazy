@@ -564,7 +564,7 @@ class Fitter(object):
             return mspec*pscale,_mline*pscale,_mbline*pscale,_mcont*pscale
    
         
-    def plot_spectrum(self,save=True,fname=None,flat_samples=None,line_snr=5.,show_lines=False,ylims=None,xlims=None):
+    def plot_spectrum(self,save=False,fname=None,flat_samples=None,line_snr=5.,show_lines=False,ylims=None,xlims=None):
         
         mask = self.data.valid
         flam = self.data.spec_fnu*self.data.to_flam
