@@ -122,10 +122,10 @@ class Fitter(object):
             okt = _A[:,mask].sum(axis=1) > 0
             _Ax = _A[okt,:]/eflam
             _yx = flam/eflam
-            #_x = np.linalg.lstsq(_Ax[:,mask].T, 
-            #                         _yx[mask], rcond=None)
-            _x = nnls(_Ax[:,mask].T, 
-                                 _yx[mask])
+            _x = np.linalg.lstsq(_Ax[:,mask].T, 
+                                     _yx[mask], rcond=None)
+            #_x = nnls(_Ax[:,mask].T, 
+            #                     _yx[mask])
 
             coeffs = np.zeros(_A.shape[0])
             coeffs[okt] = _x[0]
@@ -177,10 +177,10 @@ class Fitter(object):
                 okt = _A[:,mask].sum(axis=1) > 0
                 _Ax = _A[okt,:]/eflam
                 _yx = flam/eflam
-                #_x = np.linalg.lstsq(_Ax[:,mask].T, 
-                #                         _yx[mask], rcond=None)
-                _x = nnls(_Ax[:,mask].T, 
-                                 _yx[mask])
+                _x = np.linalg.lstsq(_Ax[:,mask].T, 
+                                         _yx[mask], rcond=None)
+                #_x = nnls(_Ax[:,mask].T, 
+                #                 _yx[mask])
 
 
                 coeffs = np.zeros(_A.shape[0])
