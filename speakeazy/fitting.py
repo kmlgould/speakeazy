@@ -127,6 +127,7 @@ class Fitter(object):
             
             fit_bounds = self.model.fit_bounds
             masked_fit_bounds = (fit_bounds[0][:][okt] ,fit_bounds[1][:][okt])
+            print(masked_fit_bounds)
             res = lsq_linear(_Ax[:,mask].T, 
                                      _yx[mask],
                                      bounds=masked_fit_bounds, method='bvls',verbose=True)
