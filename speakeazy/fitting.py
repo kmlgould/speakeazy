@@ -296,7 +296,7 @@ class Fitter(object):
         _Acont[_Acont < 0.001*_Acont.max()] = np.nan
         
         _Aline = (_A.T*coeffs)[mask,:][:,:self.model.nlines:]
-        _Aline[_Aline < 0.001*_Aline.max()] = np.nan
+        #_Aline[_Aline < 0.001*_Aline.max()] = np.nan
         
         if self.priors.params['broadlines']:
             _Abline = (_A.T*coeffs)[mask,:][:,self.model.nlines:self.model.nblines]
@@ -634,10 +634,10 @@ class Fitter(object):
                     if l_snr>line_snr:
                         #lname = line.strip(' line') # get name of line
                         lname = re.sub(r'line ', '', line)
-                        if len(Priors.lw[lname])>0:
-                            wavl = np.average(Priors.lw[lname])
+                        if len(self.data.lw[lname])>0:
+                            wavl = np.average(self.data.lw[lname])
                         else:
-                            wavl = Priors.lw[lname]
+                            wavl = self.data.lw[lname]
                         line_center = (wavl*(1.+self.theta['z']))/1e4
                         if (xlims[0]<line_center<xlims[1]):
                             plt.axvline(line_center,ls='dashed',color='blue',alpha=0.5)
