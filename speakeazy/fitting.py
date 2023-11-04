@@ -124,8 +124,10 @@ class Fitter(object):
             _yx = flam/eflam
             
             if method=='free':
-                    _x = np.linalg.lstsq(_Ax[:,mask].T, 
+                _x = np.linalg.lstsq(_Ax[:,mask].T, 
                                      _yx[mask], rcond=None)
+                coeffs = np.zeros(_A.shape[0])
+                coeffs[okt] = _x[0]
             else:
                 fit_bounds = self.model.fit_bounds
                 masked_fit_bounds = (fit_bounds[0][:][okt] ,fit_bounds[1][:][okt])
@@ -135,6 +137,8 @@ class Fitter(object):
                                      bounds=masked_fit_bounds,tol=1e-10,verbose=True)
                 _x = res.x
                 print(res.x)
+                coeffs = np.zeros(_A.shape[0])
+                coeffs[okt] = _x
             #_x = nnls(_Ax[:,mask].T, 
             #                     _yx[mask])
 
@@ -246,7 +250,7 @@ class Fitter(object):
             zbest = self.priors.params['z_in']
             zgrid = 1
             zstep = 1
-            _A, coeffs, covard, line_names_,broad_line_names_,tline = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=self.priors.params['z_in'],method='free')
+            _A, coeffs, covard, line_names_,broad_line_names_,tline = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=self.priors.params['z_in'],method=method)
 
         else: 
         
@@ -262,7 +266,7 @@ class Fitter(object):
     
             zgrid = utils.log_zgrid(self.priors.params['z_range'], step0)
             
-            zg0, chi0 = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=None,method='free')
+            zg0, chi0 = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=None,method=method)
             
             zbest0 = zg0[np.argmin(chi0)]
             
@@ -270,13 +274,13 @@ class Fitter(object):
             zgrid1 = utils.log_zgrid(zbest0 + np.array([-0.005, 0.005])*(1+zbest0), 
                                 step1)
             
-            zg1, chi1 = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=None,method='free')
+            zg1, chi1 = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=None,method=method)
             
             zbest = zg1[np.argmin(chi1)]
             
             self.priors.params['zbest']=zbest
         
-            _A, coeffs, covard, line_names_, broad_line_names_,tline = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=zbest,method='free')
+            _A, coeffs, covard, line_names_, broad_line_names_,tline = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=zbest,method=method)
         
         self.templates = _A
         #self.tline = tline
