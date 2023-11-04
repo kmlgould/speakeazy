@@ -89,7 +89,7 @@ class Fitter(object):
         
     
        
-    def fit_redshift_grid(self,zgrid,scale_disp=1.3,vel_width=100.,vel_width_broad=1000.,zfix=None): 
+    def fit_redshift_grid(self,zgrid,scale_disp=1.3,vel_width=100.,vel_width_broad=1000.,zfix=None,method='free'): 
         """__fit_redshift _summary_
 
         _extended_summary_
@@ -122,16 +122,19 @@ class Fitter(object):
             okt = _A[:,mask].sum(axis=1) > 0
             _Ax = _A[okt,:]/eflam
             _yx = flam/eflam
-            #_x = np.linalg.lstsq(_Ax[:,mask].T, 
-            #                         _yx[mask], rcond=None)
             
-            fit_bounds = self.model.fit_bounds
-            masked_fit_bounds = (fit_bounds[0][:][okt] ,fit_bounds[1][:][okt])
-            print(masked_fit_bounds)
-            res = lsq_linear(_Ax[:,mask].T, 
+            if method=='free':
+                    _x = np.linalg.lstsq(_Ax[:,mask].T, 
+                                     _yx[mask], rcond=None)
+            else:
+                fit_bounds = self.model.fit_bounds
+                masked_fit_bounds = (fit_bounds[0][:][okt] ,fit_bounds[1][:][okt])
+                print(masked_fit_bounds)
+                res = lsq_linear(_Ax[:,mask].T, 
                                      _yx[mask],
-                                     bounds=masked_fit_bounds, method='bvls',verbose=True)
-            _x = res.x
+                                     bounds=masked_fit_bounds,tol=1e-10,verbose=True)
+                _x = res.x
+                print(res.x)
             #_x = nnls(_Ax[:,mask].T, 
             #                     _yx[mask])
 
@@ -185,14 +188,18 @@ class Fitter(object):
                 okt = _A[:,mask].sum(axis=1) > 0
                 _Ax = _A[okt,:]/eflam
                 _yx = flam/eflam
-                #_x = np.linalg.lstsq(_Ax[:,mask].T, 
-                #                         _yx[mask], rcond=None)
-                fit_bounds = self.model.fit_bounds
-                masked_fit_bounds = (fit_bounds[0][:][okt] ,fit_bounds[1][:][okt])
-                res = lsq_linear(_Ax[:,mask].T, 
-                                     _yx[mask],
-                                     bounds=masked_fit_bounds, method='bvls',verbose=True)
-                _x = res.x
+                if method=='free':
+                        _x = np.linalg.lstsq(_Ax[:,mask].T, 
+                                        _yx[mask], rcond=None)
+                else:
+                    fit_bounds = self.model.fit_bounds
+                    masked_fit_bounds = (fit_bounds[0][:][okt] ,fit_bounds[1][:][okt])
+                    print(masked_fit_bounds)
+                    res = lsq_linear(_Ax[:,mask].T, 
+                                        _yx[mask],
+                                        bounds=masked_fit_bounds,tol=1e-10,verbose=True)
+                    _x = res.x
+                    print(res.x)
                 #_x = nnls(_Ax[:,mask].T, 
                 #                 _yx[mask])
 
@@ -208,7 +215,7 @@ class Fitter(object):
         
             return zgrid, chi2
         
-    def fit_redshift_chisq(self,zstep=[0.002,0.0001]):
+    def fit_redshift_chisq(self,zstep=[0.002,0.0001],method='free'):
         """fit_redshift_chisq _summary_
 
         _extended_summary_
@@ -239,7 +246,7 @@ class Fitter(object):
             zbest = self.priors.params['z_in']
             zgrid = 1
             zstep = 1
-            _A, coeffs, covard, line_names_,broad_line_names_,tline = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=self.priors.params['z_in'])
+            _A, coeffs, covard, line_names_,broad_line_names_,tline = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=self.priors.params['z_in'],method='free')
 
         else: 
         
@@ -255,7 +262,7 @@ class Fitter(object):
     
             zgrid = utils.log_zgrid(self.priors.params['z_range'], step0)
             
-            zg0, chi0 = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=None)
+            zg0, chi0 = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=None,method='free')
             
             zbest0 = zg0[np.argmin(chi0)]
             
@@ -263,13 +270,13 @@ class Fitter(object):
             zgrid1 = utils.log_zgrid(zbest0 + np.array([-0.005, 0.005])*(1+zbest0), 
                                 step1)
             
-            zg1, chi1 = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=None)
+            zg1, chi1 = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=None,method='free')
             
             zbest = zg1[np.argmin(chi1)]
             
             self.priors.params['zbest']=zbest
         
-            _A, coeffs, covard, line_names_, broad_line_names_,tline = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=zbest)
+            _A, coeffs, covard, line_names_, broad_line_names_,tline = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=zbest,method='free')
         
         self.templates = _A
         #self.tline = tline
