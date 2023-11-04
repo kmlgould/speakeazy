@@ -14,6 +14,7 @@ class TestSampler():
          
          fit_object = fitting.Fitter(spectrum,prs)
          fit_object.fit_redshift_chisq()
+         fit_object.plot_spectrum()
          self.sampler = sampling.Sampler(spectrum,prs,fit_object)
          
 

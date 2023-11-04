@@ -266,6 +266,7 @@ class Fitter(object):
 
         _model = _A.T.dot(coeffs)
         _mline = _A.T.dot(coeffs*nline_mask)
+        _mline_arr = _A[nline_mask,:]
         
         if self.priors.params['broadlines']:
             _mbline = _A.T.dot(coeffs*nbline_mask)        
@@ -293,8 +294,17 @@ class Fitter(object):
 
         _Acont = (_A.T*coeffs)[mask,:][:,self.model.nlines+self.model.nblines:]
         _Acont[_Acont < 0.001*_Acont.max()] = np.nan
+        
+        _Aline = (_A.T*coeffs)[mask,:][:,:self.model.nlines:]
+        _Aline[_Aline < 0.001*_Aline.max()] = np.nan
+        
+        if self.priors.params['broadlines']:
+            _Abline = (_A.T*coeffs)[mask,:][:,self.model.nlines:self.model.nblines]
+            _Abline[_Abline < 0.001*_Abline.max()] = np.nan
+            self.Abline = _Abline 
 
         self.Acont = _Acont
+        self.Aline = _Aline
 
         
         line_coeffs = coeffs[:self.model.nlines]
@@ -605,9 +615,14 @@ class Fitter(object):
             if hasattr(scale, "__len__"):
                 plt.plot(self.data.spec_wobs[mask], (((self.Acont.T).T))*scale[mask,None],
                         color='olive', alpha=0.3)
+                plt.plot(self.data.spec_wobs[mask], (((self.Aline.T).T))*scale[mask,None],
+                        color='blue', alpha=0.3)
             else:
                 plt.plot(self.data.spec_wobs[mask], (((self.Acont.T).T))*scale,
                         color='olive', alpha=0.3)
+                plt.plot(self.data.spec_wobs[mask], (((self.Aline.T).T))*scale,
+                        color='blue', alpha=0.3)
+                
             # plot emission lines 
 
             if show_lines:
