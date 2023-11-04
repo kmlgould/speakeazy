@@ -246,12 +246,12 @@ class Model(object):
         lb = np.zeros(NTEMP)
         
         # emission lines are lower bounded at -inf 
-        lb[:self.nlines] = -1e9
+        lb[:self.nlines] = -np.inf
         # broad lines and continuum must be lower bounded at zero 
         lb[self.nlines:] = 0.
         
         # upper bounds for everything can be up to inf basically 
-        ub = np.ones(NTEMP)*1e9
+        ub = np.ones(NTEMP)*np.inf
         
         
 
