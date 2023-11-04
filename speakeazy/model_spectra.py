@@ -238,6 +238,22 @@ class Model(object):
         if not broadlines:
             broad_line_names_ = []
 
+        # make boundary conditions for fitting least squares
+        
+
+        # lower bounds 
+        
+        lb = np.zeros(NTEMP)
+        
+        # emission lines are lower bounded at -inf 
+        lb[:self.nlines] = -np.inf
+        # broad lines and continuum must be lower bounded at zero 
+        lb[self.nlines:] = 0.
+        
+        # upper bounds for everything can be up to inf basically 
+        ub = np.ones(NTEMP)*np.inf
+
+        self.fit_bounds = (lb,ub)
         
         if chisq:
             return flux_arr, line_names_, broad_line_names_, np.array(tline)

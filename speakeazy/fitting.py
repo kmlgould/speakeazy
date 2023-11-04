@@ -17,6 +17,7 @@ from astropy.io import fits
 
 import eazy
 from grizli import utils
+from scipy.optimize import lsq_linear
 
 utils.set_warnings()
 
@@ -114,7 +115,6 @@ class Fitter(object):
         flam[~mask] = np.nan
         eflam[~mask] = np.nan
         
-        
         if isinstance(zfix, float): 
             
             _A,line_names_,broad_line_names_,tline = self.model.generate_templates(self.data,zfix,scale_disp,vel_width,vel_width_broad,theta=None,chisq=True)
@@ -122,8 +122,14 @@ class Fitter(object):
             okt = _A[:,mask].sum(axis=1) > 0
             _Ax = _A[okt,:]/eflam
             _yx = flam/eflam
-            _x = np.linalg.lstsq(_Ax[:,mask].T, 
-                                     _yx[mask], rcond=None)
+            #_x = np.linalg.lstsq(_Ax[:,mask].T, 
+            #                         _yx[mask], rcond=None)
+            
+            fit_bounds = self.model.fit_bounds
+            res = lsq_linear(_Ax[:,mask].T, 
+                                     _yx[mask],
+                                     bounds=fit_bounds, method='bvls',verbose=True)
+            _x = res[0]
             #_x = nnls(_Ax[:,mask].T, 
             #                     _yx[mask])
 
@@ -177,8 +183,13 @@ class Fitter(object):
                 okt = _A[:,mask].sum(axis=1) > 0
                 _Ax = _A[okt,:]/eflam
                 _yx = flam/eflam
-                _x = np.linalg.lstsq(_Ax[:,mask].T, 
-                                         _yx[mask], rcond=None)
+                #_x = np.linalg.lstsq(_Ax[:,mask].T, 
+                #                         _yx[mask], rcond=None)
+                fit_bounds = self.model.fit_bounds
+                res = lsq_linear(_Ax[:,mask].T, 
+                                     _yx[mask],
+                                     bounds=fit_bounds, method='bvls',verbose=True)
+                _x = res[0]
                 #_x = nnls(_Ax[:,mask].T, 
                 #                 _yx[mask])
 
