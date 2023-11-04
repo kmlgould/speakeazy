@@ -609,7 +609,7 @@ class Fitter(object):
 
             
             plt.step(wav[mask],(self.model_line*scale)[mask],color='blue',label='Lines')
-            plt.step(wav[mask],(self.model_bline*scale)[mask],color='red',label='Broad lines')
+            #plt.step(wav[mask],(self.model_bline*scale)[mask],color='red',label='Broad lines')
             #plt.step(wav[mask],self.model_cont[mask],color='olive',label='Continuum')
 
             if hasattr(scale, "__len__"):
