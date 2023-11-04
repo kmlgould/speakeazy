@@ -13,8 +13,8 @@ class TestSampler():
          self.priors = priors.Priors(self.spectrum)
          
 
-def test_fitting(self):
-         
-         fit_object = fitting.Fitter(self.spectrum,self.priors)
-         fit_object.fit_redshift_chisq()
-         fit_object.plot_spectrum()
+    def test_fitting(self):
+            
+            fit_object = fitting.Fitter(self.spectrum,self.priors)
+            fit_object.fit_redshift_chisq()
+            fit_object.plot_spectrum()
