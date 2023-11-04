@@ -122,10 +122,10 @@ class Fitter(object):
             okt = _A[:,mask].sum(axis=1) > 0
             _Ax = _A[okt,:]/eflam
             _yx = flam/eflam
-            #_x = np.linalg.lstsq(_Ax[:,mask].T, 
-            #                         _yx[mask], rcond=None)
-            _x = nnls(_Ax[:,mask].T, 
-                                 _yx[mask])
+            _x = np.linalg.lstsq(_Ax[:,mask].T, 
+                                     _yx[mask], rcond=None)
+            #_x = nnls(_Ax[:,mask].T, 
+            #                     _yx[mask])
 
             coeffs = np.zeros(_A.shape[0])
             coeffs[okt] = _x[0]
@@ -177,10 +177,10 @@ class Fitter(object):
                 okt = _A[:,mask].sum(axis=1) > 0
                 _Ax = _A[okt,:]/eflam
                 _yx = flam/eflam
-                #_x = np.linalg.lstsq(_Ax[:,mask].T, 
-                #                         _yx[mask], rcond=None)
-                _x = nnls(_Ax[:,mask].T, 
-                                 _yx[mask])
+                _x = np.linalg.lstsq(_Ax[:,mask].T, 
+                                         _yx[mask], rcond=None)
+                #_x = nnls(_Ax[:,mask].T, 
+                #                 _yx[mask])
 
 
                 coeffs = np.zeros(_A.shape[0])
@@ -266,6 +266,7 @@ class Fitter(object):
 
         _model = _A.T.dot(coeffs)
         _mline = _A.T.dot(coeffs*nline_mask)
+        _mline_arr = _A[nline_mask,:]
         
         if self.priors.params['broadlines']:
             _mbline = _A.T.dot(coeffs*nbline_mask)        
@@ -293,8 +294,17 @@ class Fitter(object):
 
         _Acont = (_A.T*coeffs)[mask,:][:,self.model.nlines+self.model.nblines:]
         _Acont[_Acont < 0.001*_Acont.max()] = np.nan
+        
+        _Aline = (_A.T*coeffs)[mask,:][:,:self.model.nlines:]
+        _Aline[_Aline < 0.001*_Aline.max()] = np.nan
+        
+        if self.priors.params['broadlines']:
+            _Abline = (_A.T*coeffs)[mask,:][:,self.model.nlines:self.model.nblines]
+            _Abline[_Abline < 0.001*_Abline.max()] = np.nan
+            self.Abline = _Abline 
 
         self.Acont = _Acont
+        self.Aline = _Aline
 
         
         line_coeffs = coeffs[:self.model.nlines]
@@ -554,7 +564,7 @@ class Fitter(object):
             return mspec*pscale,_mline*pscale,_mbline*pscale,_mcont*pscale
    
         
-    def plot_spectrum(self,save=True,fname=None,flat_samples=None,line_snr=5.,show_lines=False,ylims=None,xlims=None):
+    def plot_spectrum(self,save=False,fname=None,flat_samples=None,line_snr=5.,show_lines=False,ylims=None,xlims=None):
         
         mask = self.data.valid
         flam = self.data.spec_fnu*self.data.to_flam
@@ -605,9 +615,14 @@ class Fitter(object):
             if hasattr(scale, "__len__"):
                 plt.plot(self.data.spec_wobs[mask], (((self.Acont.T).T))*scale[mask,None],
                         color='olive', alpha=0.3)
+                plt.plot(self.data.spec_wobs[mask], (((self.Aline.T).T))*scale[mask,None],
+                        color='blue', alpha=0.3)
             else:
                 plt.plot(self.data.spec_wobs[mask], (((self.Acont.T).T))*scale,
                         color='olive', alpha=0.3)
+                plt.plot(self.data.spec_wobs[mask], (((self.Aline.T).T))*scale,
+                        color='blue', alpha=0.3)
+                
             # plot emission lines 
 
             if show_lines:
