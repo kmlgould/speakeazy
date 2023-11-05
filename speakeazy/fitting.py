@@ -135,15 +135,11 @@ class Fitter(object):
                 res = lsq_linear(_Ax[:,mask].T, 
                                      _yx[mask],
                                      bounds=masked_fit_bounds,tol=1e-10,verbose=True)
-                _x = res.x
                 print(res.x)
                 coeffs = np.zeros(_A.shape[0])
-                coeffs[okt] = _x
+                coeffs[okt] = res.x
             #_x = nnls(_Ax[:,mask].T, 
             #                     _yx[mask])
-
-            coeffs = np.zeros(_A.shape[0])
-            coeffs[okt] = _x[0]
             
            # try:
             oktemp = okt & (coeffs != 0)
@@ -193,8 +189,10 @@ class Fitter(object):
                 _Ax = _A[okt,:]/eflam
                 _yx = flam/eflam
                 if method=='free':
-                        _x = np.linalg.lstsq(_Ax[:,mask].T, 
+                    _x = np.linalg.lstsq(_Ax[:,mask].T, 
                                         _yx[mask], rcond=None)
+                    coeffs = np.zeros(_A.shape[0])
+                    coeffs[okt] = _x[0]
                 else:
                     fit_bounds = self.model.fit_bounds
                     masked_fit_bounds = (fit_bounds[0][:][okt] ,fit_bounds[1][:][okt])
@@ -202,14 +200,12 @@ class Fitter(object):
                     res = lsq_linear(_Ax[:,mask].T, 
                                         _yx[mask],
                                         bounds=masked_fit_bounds,tol=1e-10,verbose=True)
-                    _x = res.x
                     print(res.x)
+                    coeffs = np.zeros(_A.shape[0])
+                    coeffs[okt] = res.x
                 #_x = nnls(_Ax[:,mask].T, 
                 #                 _yx[mask])
 
-
-                coeffs = np.zeros(_A.shape[0])
-                coeffs[okt] = _x[0]
                 _model = _A.T.dot(coeffs)
 
                 chi = (flam - _model) / eflam
