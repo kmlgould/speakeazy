@@ -281,7 +281,7 @@ class Model(object):
 
         # broad lines
 
-        allowed_bl = ['Ha','Hb', 'Hg', 'Hd','H8','H9', 'H10', 'H11', 'H12','HeI-1083','HeI-3889','HeI-5877','HeI-6680','HeI-7065', 'HeI-8446','HeII-1640','HeII-4687']
+        allowed_bl = ['Ha','Hb', 'Hg', 'Hd','H8','H9', 'H10', 'H11', 'H12', 'PaA','PaB','PaD','PaG','Pa8','Pa9','Pa10','HeI-1083','HeI-3889','HeI-5877','HeI-6680','HeI-7065', 'HeI-8446','HeII-1640','HeII-4687']
         
         # templates = {}
         
