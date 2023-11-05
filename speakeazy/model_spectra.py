@@ -247,6 +247,7 @@ class Model(object):
         
         # emission lines are lower bounded at -inf 
         lb[:self.nlines] = -10
+        lb[3] = 1e-1 #halpha
         # broad lines and continuum must be lower bounded at zero 
         lb[self.nlines:] = 1e-2
         
