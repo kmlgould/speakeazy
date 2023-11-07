@@ -12,6 +12,8 @@ class TestSampler():
          spectrum = data.Data(spectrum_file=_spec_file,photometry_file=None,run_ID=1,phot_id=None)
          prs = priors.Priors(spectrum)
          
+         prs.params['broadlines']=True
+         
          fit_object = fitting.Fitter(spectrum,prs)
          fit_object.fit_redshift_chisq()
          fit_object.plot_spectrum()

@@ -76,13 +76,13 @@ class Sampler(object):
         
         prior_matrix[:,0] = self.make_norm_prior(self.params['zbest'],zscale,nwalkers,sample=True)
         prior_matrix[:,1] = self.prior.vw_rv.rvs(size=nwalkers)
-        prior_matrix[:,2] = self.prior.sc_rv.rvs(size=nwalkers)
+        #prior_matrix[:,2] = self.prior.sc_rv.rvs(size=nwalkers)
         
         if npa==4:
-            prior_matrix[:,3]= self.prior.vwb_rv.rvs(size=nwalkers) # but depends on if there are broadlines or not... 
-
+            prior_matrix[:,2]= self.prior.vwb_rv.rvs(size=nwalkers) # but depends on if there are broadlines or not... 
+            prior_matrix[:,3] = self.prior.sc_rv.rvs(size=nwalkers)
         else:
-            None 
+            prior_matrix[:,2] = self.prior.sc_rv.rvs(size=nwalkers)
         
         # something for epoly and ppoly here .... 
         
