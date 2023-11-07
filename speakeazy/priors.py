@@ -22,7 +22,7 @@ class Priors(object):
     to sample for joint prior distributions, perhaps use either inverse transformation method, or accept reject method. 
     """
     
-    def __init__(self,data,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,scale_disp=1.3,z=None,z0=[0.,6.],halpha_prism='free',scale_p=False,broadlines=False,prior_instructions={'redshift_prior':'norm',
+    def __init__(self,data,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,blue_in=0.,scale_disp=1.3,z=None,z0=[0.,6.],halpha_prism='free',scale_p=False,broadlines=False,prior_instructions={'redshift_prior':'norm',
                                             'z_mu' : 1., 
                                             'z_sigma' : 0.01,
                                             'velocity_prior':'norm', 
@@ -41,17 +41,18 @@ class Priors(object):
         self.data = data 
         self.lw = lw
         self.lr = lr
-        self.set_params(fix_ns,nspline,epoly,ppoly,vel_width,vel_width_broad,scale_disp,z,z0,halpha_prism,scale_p,broadlines)    
+        self.set_params(fix_ns,nspline,epoly,ppoly,vel_width,vel_width_broad,blue_in,scale_disp,z,z0,halpha_prism,scale_p,broadlines)    
         self.set_priors(prior_instructions)
         self.set_hlines_prior()
         
-    def set_params(self,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,scale_disp=1.3,z=None,z0=[1.4,1.5],halpha_prism='free',scale_p=False,broadlines=False):
+    def set_params(self,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,blue_in=0.,scale_disp=1.3,z=None,z0=[1.4,1.5],halpha_prism='free',scale_p=False,broadlines=False):
         
         self.params = {}
         self.params['z_in'] = z
         self.params['z_range'] = z0
         self.params['scale_disp']=scale_disp
         self.params['vel_width'] = vel_width
+        self.params['blue_in'] = blue_in 
         self.params['vel_width_broad'] = vel_width_broad
         self.params['fix_ns']=fix_ns
         self.params['nspline']=nspline

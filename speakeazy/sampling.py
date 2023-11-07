@@ -79,7 +79,7 @@ class Sampler(object):
         prior_matrix[:,2] = self.prior.sc_rv.rvs(size=nwalkers)
         
         if npa==4:
-            prior_matrix[:,3]= self.prior.vw_b_rv.rvs(size=nwalkers) # but depends on if there are broadlines or not... 
+            prior_matrix[:,3]= self.prior.vwb_rv.rvs(size=nwalkers) # but depends on if there are broadlines or not... 
 
         else:
             None 
@@ -243,7 +243,7 @@ class Sampler(object):
 
         # make model for continuum and lines
 
-        templ_arr,tline = self.model.generate_templates(self.data,z,sc,vw,vw_b,self.theta,chisq=False)
+        templ_arr,tline = self.model.generate_templates(self.data,z,sc,vw,vw_b,self.params['blue_in'],self.theta,chisq=False,broadlines=self.params['broadlines'])
 
         
 
@@ -296,7 +296,7 @@ class Sampler(object):
 
         # make model for continuum and lines
 
-        templ_arr,tline = self.model.generate_templates(self.data,z,sc,vw,vw_b,self.theta,chisq=False)
+        templ_arr,tline = self.model.generate_templates(self.data,z,sc,vw,vw_b,self.params['blue_in'],self.theta,chisq=False,broadlines=self.params['broadlines'])
 
         
 

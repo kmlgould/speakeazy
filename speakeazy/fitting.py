@@ -89,7 +89,7 @@ class Fitter(object):
         
     
        
-    def fit_redshift_grid(self,zgrid,scale_disp=1.3,vel_width=100.,vel_width_broad=1000.,zfix=None,method='free'): 
+    def fit_redshift_grid(self,zgrid,scale_disp=1.3,vel_width=100.,vel_width_broad=1000.,blue_in=0.,zfix=None,method='free'): 
         """__fit_redshift _summary_
 
         _extended_summary_
@@ -117,7 +117,7 @@ class Fitter(object):
         
         if isinstance(zfix, float): 
             
-            _A,line_names_,broad_line_names_,tline = self.model.generate_templates(self.data,zfix,scale_disp,vel_width,vel_width_broad,theta=None,chisq=True)
+            _A,line_names_,broad_line_names_,tline = self.model.generate_templates(self.data,zfix,scale_disp,vel_width,vel_width_broad,blue_in,theta=None,chisq=True)
         
             okt = _A[:,mask].sum(axis=1) > 0
             _Ax = _A[okt,:]/eflam
@@ -183,7 +183,7 @@ class Fitter(object):
 
             for iz, z in tqdm(enumerate(zgrid)):
 
-                _A,line_names_,broad_line_names_,tline = self.model.generate_templates(self.data,z,scale_disp,vel_width,vel_width_broad,theta=None,chisq=True)
+                _A,line_names_,broad_line_names_,tline = self.model.generate_templates(self.data,z,scale_disp,vel_width,vel_width_broad,blue_in,theta=None,chisq=True)
 
                 okt = _A[:,mask].sum(axis=1) > 0
                 _Ax = _A[okt,:]/eflam
@@ -246,7 +246,7 @@ class Fitter(object):
             zbest = self.priors.params['z_in']
             zgrid = 1
             zstep = 1
-            _A, coeffs, covard, line_names_,broad_line_names_,tline = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=self.priors.params['z_in'],method=method)
+            _A, coeffs, covard, line_names_,broad_line_names_,tline = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],self.priors.params['blue_in'],zfix=self.priors.params['z_in'],method=method)
 
         else: 
         
@@ -262,7 +262,7 @@ class Fitter(object):
     
             zgrid = utils.log_zgrid(self.priors.params['z_range'], step0)
             
-            zg0, chi0 = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=None,method=method)
+            zg0, chi0 = self.fit_redshift_grid(zgrid,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],self.priors.params['blue_in'],zfix=None,method=method)
             
             zbest0 = zg0[np.argmin(chi0)]
             
@@ -270,13 +270,13 @@ class Fitter(object):
             zgrid1 = utils.log_zgrid(zbest0 + np.array([-0.005, 0.005])*(1+zbest0), 
                                 step1)
             
-            zg1, chi1 = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=None,method=method)
+            zg1, chi1 = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],self.priors.params['blue_in'],zfix=None,method=method)
             
             zbest = zg1[np.argmin(chi1)]
             
             self.priors.params['zbest']=zbest
         
-            _A, coeffs, covard, line_names_, broad_line_names_,tline = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],zfix=zbest,method=method)
+            _A, coeffs, covard, line_names_, broad_line_names_,tline = self.fit_redshift_grid(zgrid1,self.priors.params['scale_disp'],self.priors.params['vel_width'],self.priors.params['vel_width_broad'],self.priors.params['blue_in'],zfix=zbest,method=method)
         
         self.templates = _A
         #self.tline = tline
@@ -317,11 +317,11 @@ class Fitter(object):
         _Acont[_Acont < 0.001*_Acont.max()] = np.nan
         
         _Aline = (_A.T*coeffs)[mask,:][:,:self.model.nlines:]
-        _Aline[_Aline < 0.0001*_Aline.max()] = np.nan
+        #_Aline[_Aline < 0.0001*_Aline.max()] = np.nan
         
         if self.priors.params['broadlines']:
             _Abline = (_A.T*coeffs)[mask,:][:,self.model.nlines:self.model.nlines+self.model.nblines]
-            _Abline[_Abline < 0.001*_Abline.max()] = np.nan
+            #_Abline[_Abline < 0.001*_Abline.max()] = np.nan
             self.Abline = _Abline 
 
         self.Acont = _Acont
@@ -505,7 +505,7 @@ class Fitter(object):
         # make model for continuum and lines
 
 
-        templ_arr,tline = self.models.generate_templates(z,sc,vw,vw_b,theta=self.theta,init=False)
+        templ_arr,tline = self.models.generate_templates(z,sc,vw,vw_b,blue_in,theta=self.theta,init=False)
 
         
 

@@ -106,7 +106,7 @@ class Model(object):
         return bspl.T
             
 
-    def generate_templates(self,data,z=1.0,scale_disp=1.3,vel_width=100.,vel_width_broad=1000.,theta=None,chisq=False,broadlines=False):
+    def generate_templates(self,data,z=1.0,scale_disp=1.3,vel_width=100.,vel_width_broad=1000.,blue_in=0.,theta=None,chisq=False,broadlines=False):
         """
         Generates a spectrum template comprised of gaussian emission line templates and continuum based on spline functions 
 
@@ -124,6 +124,9 @@ class Model(object):
 
         vel_width_broad: float
             broad line velocity width km/s
+            
+        blue_in: float
+            systematic blueshift of higher order Paschen lines 
 
         chisq: bool
             True if simple chi-square fit, false if used during likelihood fitting and mcmc 
@@ -170,15 +173,19 @@ class Model(object):
                 broad_line_names = [re.sub(r'broad line ', '', l,1) for l in broad_line_names_pre]
    
 
-     
+        paschen_list = ['Pa8''Pa9','Pa10']
             
         for k in line_names:
+            if k in paschen_list:
+                blue_shift = blue_in
+            else:
+                blue_shift = 0. 
             if (k not in self.lw):
                 continue
             else:
                 line_k = np.zeros(len(self.spec_wobs))
                 for lwk, lrk in zip(self.lw[k], self.lr[k]):
-                    line_k += data.emission_line(lwk*(1.+z)/1.e4,
+                    line_k += data.emission_line(((lwk*(1.+z)/1.e4)-blue_shift),
                                                  line_flux=lrk/np.sum(self.lr[k]),
                                                  scale_disp=scale_disp,
                                                  velocity_sigma=vel_width,
@@ -189,16 +196,22 @@ class Model(object):
                     line_names_.append(k)
                     #tline.append(True)
                 tline.append(0)
+                
+        
 
         if broadlines:
              
             for kb in broad_line_names:
+                if kb in paschen_list:
+                    blue_shift = blue_in
+                else:
+                    blue_shift = 0. 
                 if kb not in self.lw:
                     continue
                 else:
                     line_kb = np.zeros(len(self.spec_wobs))
                     for lwk, lrk in zip(self.lw[kb], self.lr[kb]):
-                        line_kb += data.emission_line(lwk*(1.+z)/1.e4,
+                        line_kb += data.emission_line(((lwk*(1.+z)/1.e4)-blue_shift),
                                                      line_flux=lrk/np.sum(self.lr[kb]),
                                                      scale_disp=scale_disp,
                                                      velocity_sigma=vel_width_broad,
@@ -243,22 +256,35 @@ class Model(object):
 
         # lower bounds 
         
-        lb = np.zeros(NTEMP)
-        
-        # emission lines are lower bounded at -inf 
-        lb[:self.nlines] = -10
-        lb[3] = 1e-1 #halpha
-        # broad lines and continuum must be lower bounded at zero 
-        lb[self.nlines:] = 1e-2
-        
-        # upper bounds for everything can be up to inf basically 
-        ub = np.ones(NTEMP)*1000.
-        
-        
-
-        self.fit_bounds = (lb,ub)
-        
         if chisq:
+        
+            pos_list = ["Ha", "PaA", "PaB", "PaD", "PaG", "Pa8", "Pa9", "Pa10",'SIII-9068','SIII-9531']
+            lmask = []
+            
+            for l in line_names_:
+                
+                if l in pos_list:
+                    
+                    lmask.append(True)
+                else:
+                    lmask.append(False)
+            
+            lb = np.zeros(NTEMP)
+            
+            # emission lines are lower bounded at -inf 
+            lb[:self.nlines] = -10
+            # halpha and paschen lines must be positive 
+            lb[:self.nlines][lmask] = 1e-1 
+            # broad lines and continuum must be lower bounded at zero 
+            lb[self.nlines:] = 1e-2
+            
+            # upper bounds for everything can be up to inf basically 
+            ub = np.ones(NTEMP)*1000.
+            
+            
+
+            self.fit_bounds = (lb,ub)
+
             return flux_arr, line_names_, broad_line_names_, np.array(tline)
         else:
             return flux_arr,np.array(tline)
@@ -281,7 +307,7 @@ class Model(object):
 
         # broad lines
 
-        allowed_bl = ['Ha','Hb', 'Hg', 'Hd','H8','H9', 'H10', 'H11', 'H12', 'PaA','PaB','PaD','PaG','Pa8','Pa9','Pa10','HeI-1083','HeI-3889','HeI-5877','HeI-6680','HeI-7065', 'HeI-8446','HeII-1640','HeII-4687']
+        allowed_bl = ['Ha','Hb', 'Hg', 'Hd','H8','H9', 'H10', 'H11', 'H12', 'PaA','PaB','PaD','PaG','Pa8','Pa9','Pa10','HeI-1083','HeI-3889','HeI-5877','HeI-6680','HeI-7065', 'HeI-8446','HeII-1640','HeII-4687','SIII-9068','SIII-9531']
         
         # templates = {}
         
