@@ -101,8 +101,8 @@ class Model(object):
                                        degree=3,
                                        df=nspline,
                                        log=log,
-                                       get_matrix=True
-                                       )
+                                       get_matrix=True,
+                                       clip=1.e-4)
         return bspl.T
             
 
@@ -276,7 +276,7 @@ class Model(object):
             # halpha and paschen lines must be positive 
             lb[:self.nlines][lmask] = 1e-1 
             # broad lines and continuum must be lower bounded at zero 
-            lb[self.nlines:] = 1e-2
+            lb[self.nlines:] = 1e-6
             
             # upper bounds for everything can be up to inf basically 
             ub = np.ones(NTEMP)*1000.
@@ -334,7 +334,7 @@ class Model(object):
                 halpha_prism = ['Ha','NII']
             
             hlines += halpha_prism + ['NeIII-3968']
-            fuv = ['OIII-1663']
+            fuv = ['OIII-1663','HeII-1640', 'CIV-1549']
             oii_7320 = ['OII-7325']
             extra = []
             

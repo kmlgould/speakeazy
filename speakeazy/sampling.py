@@ -65,16 +65,19 @@ class Sampler(object):
         nparam_i = npa+self.params['epoly']+self.params['ppoly']
         
         prior_matrix = np.zeros([nwalkers,nparam_i])
-        
-        if self.data.grating != "prism":
-            zscale = 0.0001
 
+        if self.params['z_in'] is not None:
+            prior_matrix[:,0] = self.prior.z_rv.rvs(size=nwalkers)
         else:
-            zscale = 0.01
-            
-        self.prior.z_rv = self.make_norm_prior(self.params['zbest'],zscale,sample=False)
-        
-        prior_matrix[:,0] = self.make_norm_prior(self.params['zbest'],zscale,nwalkers,sample=True)
+            if self.data.grating != "prism":
+                zscale = 0.0001
+    
+            else:
+                zscale = 0.01
+                
+            self.prior.z_rv = self.make_norm_prior(self.params['zbest'],zscale,sample=False)
+            prior_matrix[:,0] = self.make_norm_prior(self.params['zbest'],zscale,nwalkers,sample=True)
+
         prior_matrix[:,1] = self.prior.vw_rv.rvs(size=nwalkers)
         #prior_matrix[:,2] = self.prior.sc_rv.rvs(size=nwalkers)
         
@@ -256,6 +259,8 @@ class Sampler(object):
         mspec = templ_arr.T.dot(coeffs)
         #_mline = _A.T.dot(coeffs*tline) #+ _A.T.dot(coeffs*tbline) #broad
         _mline = templ_arr.T.dot(coeffs*nline_mask)
+        #_Acont = (templ_arr.T*coeffs)[mask,:][:,self.model.nlines+self.model.nblines:]
+        #_Acont[_Acont < 0.001*_Acont.max()] = np.nan
 
         if broadlines:
             _mbline = templ_arr.T.dot(coeffs*nbline_mask)
@@ -366,7 +371,7 @@ class Sampler(object):
 
         return lprob
     
-    def run_emcee(self,n_it=10,wp=3,nds=4,zin=1e-3,mp=True):
+    def run_emcee(self,n_it=10,wp=3,nds=4,zin=1e-3,conv_frac=0.05,mp=True):
         
 #         snx = self.theta.values()
         
@@ -418,7 +423,7 @@ class Sampler(object):
                 start = time.time()
                 for sample in sampler.sample(pos, iterations=max_n, progress=True):
                     # Only check convergence every 100 steps, advance the chain 
-                    if sampler.iteration % 100:
+                    if sampler.iteration % 500:
                         continue
 
                     chain = sampler.get_chain()
@@ -429,7 +434,7 @@ class Sampler(object):
 
                     # Check convergence
                     #converged = np.all(tau * 100 < sampler.iteration)
-                    converged = np.all(np.abs(old_stdp - stdp) / stdp < 0.1)
+                    converged = np.all(np.abs(old_stdp - stdp) / stdp < conv_frac)
                     #converged &= 0.2<accept_frac<0.25
                     #print("tau diff", np.abs(old_tau - tau) / tau)
                     if converged:

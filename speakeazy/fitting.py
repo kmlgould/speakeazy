@@ -308,13 +308,17 @@ class Fitter(object):
         flam[~mask] = np.nan
         eflam[~mask] = np.nan
 
-        full_chi2 = ((flam - _model)**2./eflam**2.)[mask].sum()
-        cont_chi2 = ((flam - _mcont)**2./eflam**2.)[mask].sum()
+        dof = len(flam[mask]) - len(coeffs[coeffs!=0.])
+        cc = coeffs[self.model.nlines+self.model.nblines:]
+        dof_cont = len(flam[mask]) - len(cc[cc!=0.])
+
+        full_chi2 = (((flam - _model)**2./eflam**2.)[mask].sum())/dof
+        cont_chi2 = ((flam - _mcont)**2./eflam**2.)[mask].sum()/dof_cont
 
         print(f'full chi2 = {full_chi2}, cont chi2 = {cont_chi2}')
 
         _Acont = (_A.T*coeffs)[mask,:][:,self.model.nlines+self.model.nblines:]
-        _Acont[_Acont < 0.001*_Acont.max()] = np.nan
+        _Acont[_Acont < 0.0000001*_Acont.max()] = np.nan
         
         _Aline = (_A.T*coeffs)[mask,:][:,:self.model.nlines:]
         #_Aline[_Aline < 0.0001*_Aline.max()] = np.nan
