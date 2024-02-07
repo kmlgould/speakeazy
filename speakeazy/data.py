@@ -54,7 +54,7 @@ class Data(object):
         
         # create new folder for this data and session 
         here =  os.getcwd()
-        newpath = here+f"/{run_ID}/"
+        newpath = here+f"/{self.run_ID}/"
         
         if not os.path.exists(newpath):
             print(f"Creating new folder for outputs in {newpath}")
