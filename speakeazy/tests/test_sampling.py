@@ -16,7 +16,7 @@ class TestSampler():
          
          fit_object = fitting.Fitter(spectrum,prs)
          fit_object.fit_redshift_chisq()
-         #fit_object.plot_spectrum()
+         fit_object.plot_spectrum(save=True)
          self.sampler = sampling.Sampler(spectrum,prs,fit_object)
          
 
@@ -79,3 +79,14 @@ class TestSampler():
          print(walker_matrix)
          
          self.sampler.run_emcee()
+         
+    def test_file_saving(self):
+        """test_file_saving 
+
+        Ensure all files from running actually end up in the designated folder 
+        """
+        test_path = f'{self.sampler.data.run_ID}_initial_fit.png'
+        
+        check = os.path.exists(test_path)
+        
+        assert check==True 

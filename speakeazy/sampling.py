@@ -389,9 +389,7 @@ class Sampler(object):
         
         # Set up the backend
         # Don't forget to clear it in case the file already exists
-        filename = str(self.data.run_ID)+"_emcee_run.h5"
-        print(filename)
-        backend = emcee.backends.HDFBackend(filename)
+        backend = emcee.backends.HDFBackend(f'{self.data.ID}_emcee_run.h5')
         backend.reset(nwalkers, ndim)
 
         
@@ -485,7 +483,7 @@ class Sampler(object):
             self.model_spec = mspec
             self.model_line = mline
             inds = np.random.randint(len(flat_samples), size=nmodels)
-            self.simple_plot_spectrum(save=True,fname=str(self.data.run_ID)+"_emcee_fullfit.png",flat_samples=flat_samples[inds])
+            self.simple_plot_spectrum(save=True,flat_samples=flat_samples[inds])
 
     def plot_walkers(self,sampler):
         samples = sampler.get_chain()
@@ -512,7 +510,7 @@ class Sampler(object):
             flat_samples[:, indexes], labels=labs)
 
         if save:
-            cfig.savefig(f'{self.ID}_corner.png')
+            cfig.savefig(f'{self.data.ID}_corner.png')
 
     # fix this 
     def plot_err_scale(self,flat_samples,nmodels):
@@ -615,5 +613,5 @@ class Sampler(object):
         else:
             plt.xlim(xmin+0.05,xmax-0.03)
         if save:
-            plt.savefig(fname)
+            plt.savefig(f'{self.data.ID}/_fit.png')
         return #fig

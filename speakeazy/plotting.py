@@ -146,7 +146,7 @@ class Plotting(object):
         else:
             plt.xlim(xmin+0.05,xmax-0.03)
         if save:
-            plt.savefig(fname)
+            plt.savefig(f'{self.data.ID}_initial_fit.png')
         return #fig
     
 
