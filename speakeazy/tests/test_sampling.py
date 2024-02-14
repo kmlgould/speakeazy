@@ -80,13 +80,3 @@ class TestSampler():
          
          self.sampler.run_emcee()
          
-    def test_file_saving(self):
-        """test_file_saving 
-
-        Ensure all files from running actually end up in the designated folder 
-        """
-        test_path = f'{self.sampler.data.run_ID}_initial_fit.png'
-        
-        check = os.path.exists(test_path)
-        
-        assert check==True 

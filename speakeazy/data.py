@@ -66,7 +66,7 @@ class Data(object):
             froot = spectrum_file.split('.fits')[0]
             
         self.fname = froot
-        self.ID = froot+f"{self.run_ID}/"
+        self.ID = f"{self.run_ID}/"+froot
         
         self.initialize_spec()
 

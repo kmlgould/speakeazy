@@ -586,10 +586,10 @@ class Fitter(object):
             #print(-2.*lprob)
             return -2.*lprob # chi2
         else:
-            return mspec*pscale,_mline*pscale,_mbline*pscale,_mcont*pscale
+            return mspec,_mline,_mbline,_mcont
    
         
-    def plot_spectrum(self,save=False,fname=None,flat_samples=None,line_snr=5.,show_lines=False,ylims=None,xlims=None):
+    def plot_spectrum(self,save=False,savedir=None,fname=None,flat_samples=None,line_snr=5.,show_lines=False,ylims=None,xlims=None):
         
         mask = self.data.valid
         flam = self.data.spec_fnu*self.data.to_flam
@@ -708,5 +708,5 @@ class Fitter(object):
         else:
             plt.xlim(xmin+0.05,xmax-0.03)
         if save:
-            plt.savefig(f'{self.data.run_ID}_initial_fit.png')
+            plt.savefig(f'{self.data.run_ID}/{self.data.fname}_initial_fit.png')
         return #fig

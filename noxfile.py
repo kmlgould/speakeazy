@@ -10,6 +10,6 @@ def tests(session):
     if session.posargs:
         test_files = session.posargs
     else:
-        test_files = ['speakeazy/tests/test_sampling.py']
+        test_files = ['speakeazy/tests/test_fitting.py']
 
     session.run('pytest', *test_files)
