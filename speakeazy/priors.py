@@ -107,9 +107,9 @@ class Priors(object):
         _extended_summary_
         """
 
-        if self.params['z'] is not None:
-            prior_instructions['z_mu'] = self.params['z']
-            prior_instructions['z_mu'] = self.params['z']*0.1 #10% error 
+        if self.params['z_in'] is not None:
+            prior_instructions['z_mu'] = self.params['z_in']
+            prior_instructions['z_mu'] = self.params['z_in']*0.1 #10% error 
         
         self.z_rv = self.create_prior(prior_instructions['redshift_prior'],prior_instructions['z_mu'],prior_instructions['z_sigma'])
         self.vw_rv = self.create_prior(prior_instructions['velocity_prior'],prior_instructions['v_mu'],prior_instructions['v_sigma'])
