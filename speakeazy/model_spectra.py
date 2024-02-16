@@ -364,7 +364,7 @@ class Model(object):
                   *fuv,
                   'CIII-1908', 'NIII-1750', 'Lya',
                   'MgII', 'NeV-3346', 'NeVI-3426',
-                  'HeI-7065', 'HeI-8446',
+                  'HeI-7065', 'HeI-8446', 'CI-9580',
                   *extra]
         
         if get_broad==True:

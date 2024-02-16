@@ -16,7 +16,7 @@ class TestSampler():
          
          fit_object = fitting.Fitter(spectrum,prs)
          fit_object.fit_redshift_chisq()
-         #fit_object.plot_spectrum()
+         fit_object.plot_spectrum(save=True)
          self.sampler = sampling.Sampler(spectrum,prs,fit_object)
          
 
@@ -79,3 +79,4 @@ class TestSampler():
          print(walker_matrix)
          
          self.sampler.run_emcee()
+         

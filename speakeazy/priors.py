@@ -88,7 +88,7 @@ class Priors(object):
         
     def set_priors(self,prior_instructions={'redshift_prior':'norm',
                                             'z_mu' : 1., 
-                                            'z_sigma' : 0.01,
+                                            'z_sigma' : 0.1,
                                             'velocity_prior':'norm', 
                                             'v_mu':300.,
                                             'v_sigma':100.,
@@ -107,6 +107,9 @@ class Priors(object):
         _extended_summary_
         """
 
+        if self.params['z_in'] is not None:
+            prior_instructions['z_mu'] = self.params['z_in']
+            prior_instructions['z_mu'] = self.params['z_in']*0.1 #10% error 
         
         self.z_rv = self.create_prior(prior_instructions['redshift_prior'],prior_instructions['z_mu'],prior_instructions['z_sigma'])
         self.vw_rv = self.create_prior(prior_instructions['velocity_prior'],prior_instructions['v_mu'],prior_instructions['v_sigma'])
