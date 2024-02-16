@@ -361,9 +361,9 @@ class Sampler(object):
         
          # h line prior
         hlr = ['line Hb','line Hg', 'line Hd', 'line Ha', 'line NII']
-        labels = list(theta.keys())
+        labels = list(self.theta.keys())
         indexes = [index for index in range(len(labels)) if labels[index] in hlr]
-        line_fluxes = self.theta[indexes]
+        line_fluxes = theta[indexes]
         if broadlines:
             logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.vwb_prior(vw_b) +self.balmer_ratios_prior(line_fluxes)
         else:
