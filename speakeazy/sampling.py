@@ -472,7 +472,7 @@ class Sampler(object):
         return sampler
     
     def read_samples(self,burnin,thin,flat=True,plot_walkers=True):
-        filename = str(self.data.run_ID)+"_emcee_run.h5"
+        filename = f'{self.data.run_ID[1:]}/emcee_run.h5'
         reader = emcee.backends.HDFBackend(filename)
         if plot_walkers:
             self.plot_walkers(reader)
