@@ -395,7 +395,7 @@ class Sampler(object):
         
         # Set up the backend
         # Don't forget to clear it in case the file already exists
-        backend = emcee.backends.HDFBackend(f'{self.data.run_ID}/emcee_run.h5')
+        backend = emcee.backends.HDFBackend(f'{self.data.run_ID[1:]}/emcee_run.h5')
         backend.reset(nwalkers, ndim)
 
         
