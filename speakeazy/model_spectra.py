@@ -67,6 +67,11 @@ class Model(object):
         self.lw = lw
         self.lr = lr
         
+        # Sodium D I lines
+        # workaround until gabe accepts my pull request
+        self.lw['NaDI']=[5891.,5897.]
+        self.lr['NaDI']=[1.,1.]
+        
         self.initialize_bsplines()
 
         # make emission line templates as delta functions for now 
