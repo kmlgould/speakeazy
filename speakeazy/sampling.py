@@ -358,10 +358,16 @@ class Sampler(object):
             lnphot = -0.5 * (((self.phot_flam - mphots) ** 2. / p2) + (np.log(2.*np.pi*p2))).sum()
 
         lnp =  -0.5 * (((flam - mspec) ** 2. / e2) + (np.log(2.*np.pi*e2)))[mask].sum() #removed neg, makes it -ln(P), minimize
+        
+         # h line prior
+        hlr = ['line Hb','line Hg', 'line Hd', 'line Ha', 'line NII']
+        labels = list(theta.keys())
+        indexes = [index for index in range(len(labels)) if labels[index] in hlr]
+        line_fluxes = theta[indexes]
         if broadlines:
-            logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.vwb_prior(vw_b) + self.prior.coeffs_prior(coeffs) #+self.balmer_ratios_prior(line_fluxes)
+            logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.vwb_prior(vw_b) +self.balmer_ratios_prior(line_fluxes)
         else:
-            logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.coeffs_prior(coeffs)
+            logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.coeffs_prior(coeffs) +self.balmer_ratios_prior(line_fluxes)
         lprob = lnp + logprior + lnphot
 
         if np.isnan(lprob):

@@ -277,10 +277,12 @@ class Model(object):
             lb = np.zeros(NTEMP)
             
             # emission lines are lower bounded at -inf 
-            lb[:self.nlines] = -1000.
+            #lb[:self.nlines] = -1000.
             # halpha and paschen lines must be positive 
-            #lb[:self.nlines][lmask] = 1e-1 
-            #lb[:self.nlines][~lmask] = -1000.
+            
+            # make mask for ha and nii = make bounds that ha>2 * nii. 
+            lb[:self.nlines][lmask] = 1e-1 
+            lb[:self.nlines][~lmask] = -1000.
             # broad lines and continuum must be lower bounded at zero 
             lb[self.nlines:] = 1e-6
             

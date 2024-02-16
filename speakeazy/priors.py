@@ -151,17 +151,19 @@ class Priors(object):
         hahb_lr = self.lr['Balmer 10kK'][0] 
         hahg_lr = self.lr['Balmer 10kK'][0]*(1./self.lr['Balmer 10kK'][2])
         hahd_lr = self.lr['Balmer 10kK'][0]*(1./self.lr['Balmer 10kK'][3])
+        haanii_lr = 2.
         #print("2.86, 0.47, 0.26")
         #print(hahb_lr,hghb_lr,hdhb_lr)
         
         self.hahb_rv = norm(loc=hahb_lr,scale=1.)
         self.hahg_rv = norm(loc=hahg_lr,scale=1.)
         self.hahd_rv = norm(loc=hahd_lr,scale=1.)
+        self.hanii_rv = norm(loc=haanii_lr,scale=0.1)
     
     #vw prior
 
     def vw_prior(self,vw):
-        if not (vw>0.) & (vw<1000.):
+        if not (vw>1.) & (vw<1000.):
             return -np.inf 
         return self.vw_rv.logpdf(vw)
 
@@ -172,7 +174,7 @@ class Priors(object):
 
 
     def sc_prior(self,sc):
-        if not sc>0.999:
+        if not sc>1.3:
             return -np.inf 
         return self.sc_rv.logpdf(sc)
 
@@ -194,9 +196,14 @@ class Priors(object):
         
         # Hb,Hg,Hd,Ha
 
-        Hb, Hg, Hd, Ha = line_fluxes
+        Hb, Hg, Hd, Ha, NII = line_fluxes
 
         #HbHg
+        if ((Ha<0.) & (NII<0.)): 
+            #print('both zero')
+            hanii_prior = 0. #if they're both neg we don't impose a prior 
+        else: 
+            hanii_prior = self.hanii_rv.logpdf(Ha/NII)
 
         if ((Ha<0.) & (Hb<0.)): 
             #print('both zero')
@@ -222,4 +229,4 @@ class Priors(object):
     #    """line_prior measures FWHM of lines and draws vel width and scale disp from joint prior distribution 
     #    takes as input: raw data? ehhhh 
     #    _extended_summary_
-    #    """
+    #    """ 
