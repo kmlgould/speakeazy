@@ -365,7 +365,7 @@ class Sampler(object):
         indexes = [index for index in range(len(labels)) if labels[index] in hlr]
         line_fluxes = theta[indexes]
         if broadlines:
-            logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.vwb_prior(vw_b) +self.prior,balmer_ratios_prior(line_fluxes)
+            logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.vwb_prior(vw_b) +self.prior.balmer_ratios_prior(line_fluxes)
         else:
             logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.coeffs_prior(coeffs) +self.prior.balmer_ratios_prior(line_fluxes)
         lprob = lnp + logprior + lnphot

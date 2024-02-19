@@ -223,7 +223,7 @@ class Priors(object):
         else: 
             hahd_prior = self.hahd_rv.logpdf(Ha/Hd)
             
-        return  hahb_prior + hahg_prior + hahd_prior
+        return hanii_prior #  hahb_prior + hahg_prior + hahd_prior
     
     #def measure_line_prior():
     #    """line_prior measures FWHM of lines and draws vel width and scale disp from joint prior distribution 
