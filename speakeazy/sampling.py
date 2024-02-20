@@ -364,10 +364,14 @@ class Sampler(object):
         labels = list(self.theta.keys())
         indexes = [index for index in range(len(labels)) if labels[index] in hlr]
         line_fluxes = theta[indexes]
-        if broadlines:
-            logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.vwb_prior(vw_b) +self.prior.balmer_ratios_prior(line_fluxes)
+        if len(line_fluxes)<5:
+            balmer_prior = 0.
         else:
-            logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.coeffs_prior(coeffs) +self.prior.balmer_ratios_prior(line_fluxes)
+            balmer_prior = self.prior.balmer_ratios_prior(line_fluxes)
+        if broadlines:
+            logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.vwb_prior(vw_b) +balmer_prior
+        else:
+            logprior = self.prior.z_rv.logpdf(z) + self.prior.escale_prior(escale) + self.prior.sc_prior(sc) + self.prior.vw_prior(vw) + self.prior.coeffs_prior(coeffs) +balmer_prior
         lprob = lnp + logprior + lnphot
 
         if np.isnan(lprob):
