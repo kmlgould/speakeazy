@@ -174,7 +174,7 @@ class Priors(object):
 
 
     def sc_prior(self,sc):
-        if not sc>1.3:
+        if not sc>1.:
             return -np.inf 
         return self.sc_rv.logpdf(sc)
 
