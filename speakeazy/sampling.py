@@ -271,6 +271,8 @@ class Sampler(object):
             _mcont = mspec - _mline
             _mbline = 0.
             
+        # equivelent widths 
+            
         return mspec,_mline
         
         
@@ -364,7 +366,7 @@ class Sampler(object):
         labels = list(self.theta.keys())
         indexes = [index for index in range(len(labels)) if labels[index] in hlr]
         line_fluxes = theta[indexes]
-        if len(line_fluxes)<5:
+        if len(line_fluxes)<5: # this is a shitty fix 
             balmer_prior = 0.
         else:
             balmer_prior = self.prior.balmer_ratios_prior(line_fluxes)

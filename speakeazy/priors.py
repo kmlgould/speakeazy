@@ -143,7 +143,7 @@ class Priors(object):
 
     
     def set_hlines_prior(self):
-        from scipy.stats import norm
+        from scipy.stats import norm,lognorm
 
         # Balmer line ratios for Ha,Hb,Hg,Hd, prior based on case B, ratios from Groves et al. 2011
         # https://arxiv.org/pdf/1109.2597.pdf
@@ -158,7 +158,8 @@ class Priors(object):
         self.hahb_rv = norm(loc=hahb_lr,scale=1.)
         self.hahg_rv = norm(loc=hahg_lr,scale=1.)
         self.hahd_rv = norm(loc=hahd_lr,scale=1.)
-        self.hanii_rv = norm(loc=haanii_lr,scale=0.1)
+        #self.hanii_rv = norm(loc=haanii_lr,scale=0.1)
+        self.hanii_rv = lognorm(1.3,loc=0.5,scale=3.)
     
     #vw prior
 
