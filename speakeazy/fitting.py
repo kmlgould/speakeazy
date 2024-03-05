@@ -424,6 +424,83 @@ class Fitter(object):
         #initial_params = np.array(list(self.theta.values()))
         
         return
+    
+    
+    #speakeazy.fitting.fit.measure_velocity_prior()
+    def measure_velocity_prior(self,xlims=0.15):
+        """__fit_redshift  - measure velocity prior - this must be manually run 
+        
+        Measures a custom line velocity prior by selecting the reddest high SNR (>5) line, measuring the intrinsic velocity
+        for a given scale dispersion, and generating a curve of this. This curve is saved for sampling
+
+        Returns:
+            Line velocity dispersion for the given scale dispersion parameter [km/s]
+        """
+        
+            # measure velocity prior then set self.vw_prior to that via interpolation
+
+        from scipy.interpolate import UnivariateSpline
+
+        snr_cutoff = 5.
+        
+        line_snr = np.array([np.abs(self.line_table[line][0])/np.abs(self.line_table[line][1]) for line in self.line_table])
+        line_idx = np.where(line_snr>snr_cutoff)
+        d = self.line_table
+        high_snr = line_snr[line_idx]
+        line_list = []
+        for i,sn in zip(line_idx[0],high_snr):
+            print(f'{list(d.keys())[i]},{sn:.1f}')
+            line_list.append(list(d.keys())[i])
+        
+        
+        # step 2: find the reddest wavelength line / choose a line 
+        # if blended, say so? or add this bit later?
+        
+        wl_array = []
+        
+        for line in line_list:
+            lname = re.sub(r'line ', '', line)
+            if len(self.data.lw[lname])>0:
+                wavl = np.average(self.data.lw[lname])
+            else:
+                wavl = self.data.lw[lname]
+            wl_array.append(wavl)
+        
+        
+        # step 3: get FWHM of line in microns 
+        
+        reddest_line_idx = -1
+        xpoint = (wl_array[reddest_line_idx]*(1.+self.theta['z']))/1e4
+        print(xpoint)
+        sel = (self.data.spec_wobs>xpoint-xlims)  & (self.data.spec_wobs<xpoint+xlims) #this should be changed in the future so we actually select the line model. 
+        
+        mask = self.data.valid
+        flam = self.data.spec_fnu*self.data.to_flam
+        
+        
+        x = self.data.spec_wobs[mask&sel]
+        y = (flam-self.model_cont)[mask&sel]
+        z = (flam)[mask&sel]
+        
+        spline = UnivariateSpline(x, (y-(np.max(y)/2)), s=0)
+        r1, r2 = spline.roots() # find the roots - add catch for if it doesn't find roots? 
+        
+        FWHM = (r2-r1)
+        
+        fac = (2.*np.sqrt(2.*np.log(2.)))
+        
+        line_wl = (1.+self.theta['z'])*(wl_array[reddest_line_idx ]/1e4)
+        R_l = np.interp(line_wl,self.data.spec_wobs,self.data.spec_R_fwhm)
+        fwhm_R_um = line_wl/R_l
+        
+        scale_disp = np.linspace(0.9,2.,128)
+        
+        vel_sig = np.sqrt(((FWHM/line_wl)*3e5/fac)**2. - ((fwhm_R_um/line_wl)*3e5/fac/scale_disp)**2.) #pick scale disp here. 
+        velsig_fit = np.sqrt(((FWHM/line_wl)*3e5/fac)**2. - ((fwhm_R_um/line_wl)*3e5/fac/self.priors.params['scale_disp'])**2.)
+
+        self.sc_vw_distribution = np.array([scale_disp,vel_sig])
+
+        return velsig_fit
       
     """  
     def fit_spectrum(self,ll=False,**kwargs):

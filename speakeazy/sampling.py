@@ -46,6 +46,14 @@ class Sampler(object):
         self.covar_i = fit_object.covar_i
         self.model = fit_object.model
         self.model.spl_mask = fit_object.spl_mask
+        
+        # check if bespoke velocity prior has been measured, otherwise set to zero. 
+        if hasattr(fit_object,'sc_vw_distribution'):
+            self.sc_vw_distribution = fit_object.sc_vw_distribution
+            self.custom_vw = True
+        else:
+            self.sc_vw_distribution = 0
+            self.custom_vw = False
     
     @staticmethod
     def make_norm_prior(mean=0.,sigma=1.,nwalkers=1000,sample=False):
@@ -73,13 +81,33 @@ class Sampler(object):
                 zscale = 0.0001
     
             else:
-                zscale = 0.01
+                zscale = 0.001
                 
             self.prior.z_rv = self.make_norm_prior(self.params['zbest'],zscale,sample=False)
             prior_matrix[:,0] = self.make_norm_prior(self.params['zbest'],zscale,nwalkers,sample=True)
+            
+        # here we add the custom scale disp and velocity sigma prior :)
+        # strawberry conch 
+        
+        if self.custom_vw:
+            
+            scale_disp = self.sc_vw_distribution[0]
+            vel_sig = self.sc_vw_distribution[1]
+            
+            sc_prior = self.prior.create_prior(prior_type='flat',mu=1.,sigma=1.)
+            sc_prior_rvs = sc_prior.rvs(size=nwalkers)
+            noise = self.prior.create_prior(prior_type='norm',mu=1.,sigma=0.1) #ask gabe about this
+            noise_rvs = noise.rvs(size=nwalkers)
 
-        prior_matrix[:,1] = self.prior.vw_rv.rvs(size=nwalkers)
-        #prior_matrix[:,2] = self.prior.sc_rv.rvs(size=nwalkers)
+            vw_prior = np.interp(sc_prior_rvs*noise_rvs,scale_disp,vel_sig)
+            
+            prior_matrix[:,1] = vw_prior
+            prior_matrix[:,2] = sc_prior_rvs
+            
+        else:
+            
+            prior_matrix[:,1] = self.prior.vw_rv.rvs(size=nwalkers)
+            prior_matrix[:,2] = self.prior.sc_rv.rvs(size=nwalkers)
         
         if npa==4:
             prior_matrix[:,2]= self.prior.vwb_rv.rvs(size=nwalkers) # but depends on if there are broadlines or not... 
@@ -96,7 +124,7 @@ class Sampler(object):
         c = np.polyfit(self.data.spec_wobs,y,o)
         
         for i in range(self.params['epoly']):
-            prior_matrix[:,npa+i] = self.make_norm_prior(mean=c[i],sigma=0.1*abs(c[i]),nwalkers=nwalkers,sample=True)
+            prior_matrix[:,npa+i] = self.make_norm_prior(mean=c[i],sigma=10.*abs(c[i]),nwalkers=nwalkers,sample=True)
             
         # doesn't include photometry scaling right now. 
         
