@@ -22,7 +22,7 @@ class Priors(object):
     to sample for joint prior distributions, perhaps use either inverse transformation method, or accept reject method. 
     """
     
-    def __init__(self,data,fix_ns=True,nspline=13,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,blue_in=0.,scale_disp=1.3,z=None,z0=[0.,6.],halpha_prism='free',scale_p=False,broadlines=False,prior_instructions={'redshift_prior':'norm',
+    def __init__(self,data,fix_ns=True,nspline=21,epoly=3,ppoly=3,vel_width=100.,vel_width_broad=300.,blue_in=0.,scale_disp=1.3,z=None,z0=[0.,6.],halpha_prism='free',scale_p=False,broadlines=False,prior_instructions={'redshift_prior':'norm',
                                             'z_mu' : 1., 
                                             'z_sigma' : 0.01,
                                             'velocity_prior':'norm', 
