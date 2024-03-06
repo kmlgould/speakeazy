@@ -325,10 +325,10 @@ class Fitter(object):
         print(f'full chi2 = {full_chi2}, cont chi2 = {cont_chi2}')
 
         _Acont = (_A.T*coeffs)[mask,:][:,self.model.nlines+self.model.nblines:]
-        _Acont[_Acont < 0.0001*_Acont.max()] = np.nan
+        _Acont[_Acont < 0.00001*_Acont.max()] = np.nan
         
         _Aline = (_A.T*coeffs)[mask,:][:,:self.model.nlines:]
-        _Aline[_Aline < 0.0001*_Aline.max()] = np.nan
+        _Aline[np.abs(_Aline) < np.abs(0.00001*_Aline.max())] = np.nan
         
         if self.priors.params['broadlines']:
             _Abline = (_A.T*coeffs)[mask,:][:,self.model.nlines:self.model.nlines+self.model.nblines]
