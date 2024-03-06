@@ -376,7 +376,7 @@ class Fitter(object):
          # remove line coeffs that are zero 
         
         line_mask = line_coeffs!=0. 
-        self.line_max = line_mask
+        self.model.line_mask = line_mask
         self.model.nlines=np.sum(line_mask)
 
 
